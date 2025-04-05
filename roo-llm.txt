@@ -1,0 +1,1151 @@
+TITLE: Class Relationship Diagram for Cache Strategy System in Mermaid
+DESCRIPTION: A class diagram showing the relationships between the main classes in the cache strategy system, including CacheStrategy, MultiPointStrategy, AwsBedrockHandler, CacheStrategyConfig, ModelInfo, CacheResult, and CachePointPlacement.
+
+LANGUAGE: mermaid
+CODE:
+classDiagram
+    class CacheStrategy {
+        <<abstract>>
+        #config: CacheStrategyConfig
+        #systemTokenCount: number
+        +determineOptimalCachePoints(): CacheResult
+        #initializeMessageGroups(): void
+        #calculateSystemTokens(): void
+        #createCachePoint(): ContentBlock
+        #messagesToContentBlocks(messages): Message[]
+        #meetsMinTokenThreshold(tokenCount): boolean
+        #estimateTokenCount(message): number
+        #applyCachePoints(messages, placements): Message[]
+        #formatResult(systemBlocks, messages): CacheResult
+    }
+
+    class MultiPointStrategy {
+        +determineOptimalCachePoints(): CacheResult
+        -determineMessageCachePoints(minTokensPerPoint, remainingCachePoints): CachePointPlacement[]
+        -formatWithoutCachePoints(): CacheResult
+        -findOptimalPlacementForRange(startIndex, endIndex, minTokensPerPoint): CachePointPlacement
+    }
+
+    class AwsBedrockHandler {
+        -client: BedrockRuntimeClient
+        -costModelConfig: object
+        -previousCachePointPlacements: Map<string, CachePointPlacement[]>
+        +createMessage(systemPrompt, messages): ApiStream
+        +completePrompt(prompt): Promise<string>
+        -supportsAwsPromptCache(modelConfig): boolean
+        -getModelByName(modelName): object
+        +getModel(): object
+        -removeCachePoints(content): any
+        -convertToBedrockConverseMessages(anthropicMessages, systemMessage, usePromptCache, modelInfo, conversationId): object
+    }
+
+    class CacheStrategyConfig {
+        +modelInfo: ModelInfo
+        +systemPrompt?: string
+        +messages: MessageParam[]
+        +usePromptCache: boolean
+        +previousCachePointPlacements?: CachePointPlacement[]
+    }
+
+    class ModelInfo {
+        +maxTokens: number
+        +contextWindow: number
+        +supportsPromptCache: boolean
+        +maxCachePoints: number
+        +minTokensPerCachePoint: number
+        +cachableFields: Array<string>
+    }
+
+    class CacheResult {
+        +system: SystemContentBlock[]
+        +messages: Message[]
+        +messageCachePointPlacements?: CachePointPlacement[]
+    }
+
+    class CachePointPlacement {
+        +index: number
+        +type: string
+        +tokensCovered: number
+    }
+
+    CacheStrategy <|-- MultiPointStrategy : extends
+    CacheStrategy o-- CacheStrategyConfig : uses
+    CacheStrategyConfig o-- ModelInfo : contains
+    CacheStrategy ..> CacheResult : produces
+    CacheStrategy ..> CachePointPlacement : creates
+    AwsBedrockHandler ..> MultiPointStrategy : creates
+    AwsBedrockHandler ..> CachePointPlacement : tracks
+    MultiPointStrategy ..> CachePointPlacement : preserves
+
+----------------------------------------
+
+TITLE: Accessing and using the Roo Code API in TypeScript
+DESCRIPTION: This snippet demonstrates how to get access to the Roo Code API and use its methods for interacting with Roo Code tasks. It includes examples of starting new tasks with text or images, sending messages, and simulating button presses.
+
+LANGUAGE: typescript
+CODE:
+const extension = vscode.extensions.getExtension<RooCodeAPI>("rooveterinaryinc.roo-cline")
+
+if (!extension?.isActive) {
+	throw new Error("Extension is not activated")
+}
+
+const api = extension.exports
+
+if (!api) {
+	throw new Error("API is not available")
+}
+
+// Start a new task with an initial message.
+await api.startNewTask("Hello, Roo Code API! Let's make a new project...")
+
+// Start a new task with an initial message and images.
+await api.startNewTask("Use this design language", ["data:image/webp;base64,..."])
+
+// Send a message to the current task.
+await api.sendMessage("Can you fix the @problems?")
+
+// Simulate pressing the primary button in the chat interface (e.g. 'Save' or 'Proceed While Running').
+await api.pressPrimaryButton()
+
+// Simulate pressing the secondary button in the chat interface (e.g. 'Reject').
+await api.pressSecondaryButton()
+
+----------------------------------------
+
+TITLE: Visualizing Model Identification Flow with Mermaid Sequence Diagram
+DESCRIPTION: A sequence diagram showing the flow of how model identification works in the Bedrock provider, from constructor initialization through various parsing and lookup functions.
+
+LANGUAGE: mermaid
+CODE:
+sequenceDiagram
+    participant Constructor
+    participant parseArn
+    participant parseBaseModelId
+    participant getModelById
+    participant getModel
+
+    Constructor->>parseArn: Initialize (if awsCustomArn provided)
+    parseArn->>parseBaseModelId: Extract region prefix from modelId
+    parseBaseModelId-->>parseArn: Return modelId without prefix
+    parseArn->>parseArn: Determine if cross-region inference
+    parseArn-->>Constructor: Return arnInfo with modelId and crossRegionInference flag
+    Constructor->>getModel: Call getModel()
+    getModel->>getModelById: Lookup model
+    getModelById-->>getModel: Return model info
+    getModel-->>Constructor: Return model config
+    Constructor->>Constructor: Set this.costModelConfig
+
+----------------------------------------
+
+TITLE: Sequence Diagram for Multi-Point Strategy Process Flow in Mermaid
+DESCRIPTION: A sequence diagram illustrating the process flow when using the MultiPointStrategy with multiple cache points in messages, showing interactions between Client Code, AwsBedrockHandler, MultiPointStrategy, and AWS Bedrock Service.
+
+LANGUAGE: mermaid
+CODE:
+sequenceDiagram
+    participant Client as Client Code
+    participant Bedrock as AwsBedrockHandler
+    participant Strategy as MultiPointStrategy
+    participant AWS as AWS Bedrock Service
+
+    Client->>Bedrock: createMessage(systemPrompt, messages)
+    Note over Bedrock: Generate conversationId to track cache points
+    Bedrock->>Bedrock: getModel() to get model info
+    Bedrock->>Bedrock: Check if model supports prompt cache
+
+    Bedrock->>Strategy: new MultiPointStrategy(config)
+    Note over Strategy: config contains modelInfo, systemPrompt, messages, usePromptCache, previousCachePointPlacements
+
+    Bedrock->>Strategy: determineOptimalCachePoints()
+
+    alt usePromptCache is false or no messages
+        Strategy->>Strategy: formatWithoutCachePoints()
+    else
+        Strategy->>Strategy: Check if system cache is supported
+        alt supportsSystemCache and systemPrompt exists
+            Strategy->>Strategy: meetsMinTokenThreshold(systemTokenCount)
+            alt systemTokenCount >= minTokensPerCachePoint
+                Strategy->>Strategy: Add cache point after system prompt
+                Note over Strategy: Decrement remainingCachePoints
+            end
+        end
+
+        Strategy->>Strategy: determineMessageCachePoints(minTokensPerPoint, remainingCachePoints)
+        alt previousCachePointPlacements exists
+            Note over Strategy: Analyze previous placements
+            Note over Strategy: Preserve N-1 cache points when possible
+            Note over Strategy: Determine which points to keep or combine
+        else
+            loop while currentIndex < messages.length and remainingCachePoints > 0
+                Strategy->>Strategy: findOptimalPlacementForRange(currentIndex, totalMessages-1, minTokensPerPoint)
+                alt placement found
+                    Strategy->>Strategy: Add placement to placements array
+                    Strategy->>Strategy: Update currentIndex and decrement remainingCachePoints
+                end
+            end
+        end
+        Strategy->>Strategy: applyCachePoints(messages, placements)
+        Strategy->>Strategy: Store cache point placements in result
+    end
+
+    Strategy-->>Bedrock: Return CacheResult with system blocks, messages, and messageCachePointPlacements
+
+    Bedrock->>Bedrock: Store cache point placements for conversationId
+    Bedrock->>AWS: Send request with multiple cache points
+    AWS-->>Bedrock: Stream response
+    Bedrock-->>Client: Yield response chunks
+
+----------------------------------------
+
+TITLE: Initializing Configuration for Cache Point Placement in JavaScript
+DESCRIPTION: Configuration setup for a prompt cache system defining model parameters and conversation messages. It includes settings for context window size, token limits, cache points, and the initial conversation content.
+
+LANGUAGE: javascript
+CODE:
+const config = {
+	modelInfo: {
+		maxTokens: 4096,
+		contextWindow: 200000,
+		supportsPromptCache: true,
+		maxCachePoints: 3,
+		minTokensPerCachePoint: 100,
+		cachableFields: ["system", "messages"],
+	},
+	systemPrompt: "You are a helpful assistant.", // ~10 tokens
+	messages: [
+		{ role: "user", content: "Tell me about machine learning." }, // ~50 tokens
+		{ role: "assistant", content: "Machine learning is a field of study..." }, // ~150 tokens
+		{ role: "user", content: "What about deep learning?" }, // ~40 tokens
+		{ role: "assistant", content: "Deep learning is a subset of machine learning..." }, // ~160 tokens
+	],
+	usePromptCache: true,
+}
+
+----------------------------------------
+
+TITLE: Defining Global TypeScript Interfaces for VSCode Extension Tests
+DESCRIPTION: TypeScript declaration for global objects available in tests, including the API, provider, extension, and panel objects for accessing the extension's functionality.
+
+LANGUAGE: typescript
+CODE:
+declare global {
+	var api: RooCodeAPI
+	var provider: ClineProvider
+	var extension: vscode.Extension<RooCodeAPI>
+	var panel: vscode.WebviewPanel
+}
+
+----------------------------------------
+
+TITLE: Adding ExtensionStateContextType Interface for Checkbox Settings in TypeScript
+DESCRIPTION: Code snippet showing how to define a TypeScript interface for a checkbox setting in the ExtensionStateContext.tsx file. It includes the boolean state property and its setter function.
+
+LANGUAGE: typescript
+CODE:
+interface ExtensionStateContextType {
+	multisearchDiffEnabled: boolean
+	setMultisearchDiffEnabled: (value: boolean) => void
+}
+
+----------------------------------------
+
+TITLE: Initializing Standard Bedrock Model Handler in JavaScript
+DESCRIPTION: Example code showing how to initialize a standard AWS Bedrock handler with a specific model ID. This is the basic configuration for accessing foundation models without custom ARNs.
+
+LANGUAGE: javascript
+CODE:
+const handler = new AwsBedrockHandler({
+	apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+	awsAccessKey: "ACCESS_KEY",
+	awsSecretKey: "SECRET_KEY",
+	awsRegion: "us-east-1",
+})
+
+----------------------------------------
+
+TITLE: Creating a New Integration Test for VSCode Extension
+DESCRIPTION: Template for writing new integration tests using Mocha's TDD interface with suite and test functions. Shows basic structure with assertions.
+
+LANGUAGE: typescript
+CODE:
+import * as assert from "assert"
+import * as vscode from "vscode"
+
+suite("Your Test Suite Name", () => {
+	test("Should do something specific", async function () {
+		// Your test code here
+	})
+})
+
+----------------------------------------
+
+TITLE: Adding ExtensionStateContextType Interface for Dropdown Settings in TypeScript
+DESCRIPTION: Code snippet showing how to define a TypeScript interface for a dropdown/select setting in the ExtensionStateContext.tsx file. It includes the string state property and its setter function.
+
+LANGUAGE: typescript
+CODE:
+interface ExtensionStateContextType {
+	preferredLanguage: string
+	setPreferredLanguage: (value: string) => void
+}
+
+----------------------------------------
+
+TITLE: Implementing Error Handling in VSCode Extension Tests
+DESCRIPTION: Pattern for wrapping test code in try/catch blocks and ensuring cleanup of resources even if tests fail.
+
+LANGUAGE: typescript
+CODE:
+try {
+	// Test code
+} finally {
+	// Cleanup code
+}
+
+----------------------------------------
+
+TITLE: Initializing Bedrock Handler with Prompt Router ARN
+DESCRIPTION: Example code showing how to initialize the AWS Bedrock handler with a custom ARN for a prompt router. This configuration allows routing to different models based on runtime conditions.
+
+LANGUAGE: javascript
+CODE:
+const handler = new AwsBedrockHandler({
+	apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+	awsAccessKey: "ACCESS_KEY",
+	awsSecretKey: "SECRET_KEY",
+	awsRegion: "us-west-2",
+	awsCustomArn: "arn:aws:bedrock:us-west-2:123456789012:prompt-router/my-router",
+})
+
+----------------------------------------
+
+TITLE: Handling Checkbox Setting in ClineProvider.ts Case Statement
+DESCRIPTION: Code snippet demonstrating how to handle a checkbox setting message in the setWebviewMessageListener method of ClineProvider.ts. It updates the global state and posts the updated state back to the webview.
+
+LANGUAGE: typescript
+CODE:
+case "multisearchDiffEnabled":
+  await this.updateGlobalState("multisearchDiffEnabled", message.bool)
+  await this.postStateToWebview()
+  break
+
+----------------------------------------
+
+TITLE: Implementing Dropdown/Select UI in SettingsView.tsx
+DESCRIPTION: Code snippet showing how to add a select element for a dropdown setting in the SettingsView.tsx file. It includes styling to match VSCode's theming system and multiple options for selection.
+
+LANGUAGE: typescript
+CODE:
+<select
+  value={preferredLanguage}
+  onChange={(e) => setPreferredLanguage(e.target.value)}
+  style={{
+    width: "100%",
+    padding: "4px 8px",
+    backgroundColor: "var(--vscode-input-background)",
+    color: "var(--vscode-input-foreground)",
+    border: "1px solid var(--vscode-input-border)",
+    borderRadius: "2px"
+  }}>
+  <option value="English">English</option>
+  <option value="Spanish">Spanish</option>
+  ...
+</select>
+
+----------------------------------------
+
+TITLE: Initializing Bedrock Handler with Cross-Region Inference
+DESCRIPTION: Example code showing how to initialize the AWS Bedrock handler with cross-region inference enabled. This allows using models in regions different from the client's primary region.
+
+LANGUAGE: javascript
+CODE:
+const handler = new AwsBedrockHandler({
+	apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+	awsAccessKey: "ACCESS_KEY",
+	awsSecretKey: "SECRET_KEY",
+	awsRegion: "eu-west-1",
+	awsUseCrossRegionInference: true,
+})
+
+----------------------------------------
+
+TITLE: Implementing Polling for Async Operations in VSCode Tests
+DESCRIPTION: Pattern for waiting for asynchronous operations to complete using a polling approach with timeout.
+
+LANGUAGE: typescript
+CODE:
+let startTime = Date.now()
+
+while (Date.now() - startTime < timeout) {
+	if (condition) {
+		break
+	}
+
+	await new Promise((resolve) => setTimeout(resolve, interval))
+}
+
+----------------------------------------
+
+TITLE: Initial Cache Point Placement Output in JavaScript
+DESCRIPTION: The resulting cache point placements from the determineMessageCachePoints method for a new conversation. Shows a single cache point placed after the second user message where the accumulated tokens exceed the minimum threshold.
+
+LANGUAGE: javascript
+CODE:
+[
+	{
+		index: 2, // After the second user message (What about deep learning?)
+		type: "message",
+		tokensCovered: 240, // ~240 tokens covered (first 3 messages)
+	},
+]
+
+----------------------------------------
+
+TITLE: Updated Configuration with Previous Cache Points in JavaScript
+DESCRIPTION: Configuration for an extended conversation that includes existing cache point placements from a previous session. Demonstrates how to maintain cache coherence when adding new messages to an existing conversation.
+
+LANGUAGE: javascript
+CODE:
+const config = {
+	// Same modelInfo and systemPrompt as before
+	messages: [
+		// Previous 4 messages...
+		{ role: "user", content: "How do neural networks work?" }, // ~50 tokens
+		{ role: "assistant", content: "Neural networks are composed of layers of nodes..." }, // ~180 tokens
+	],
+	usePromptCache: true,
+	// Pass the previous cache point placements from Example 1
+	previousCachePointPlacements: [
+		{
+			index: 2, // After the second user message (What about deep learning?)
+			type: "message",
+			tokensCovered: 240,
+		},
+	],
+}
+
+----------------------------------------
+
+TITLE: Cache Point Placements with Preservation in JavaScript
+DESCRIPTION: Output showing how the cache system preserves existing cache points while adding new ones as the conversation grows. This demonstrates the cache preservation strategy that maximizes cache hit rates in evolving conversations.
+
+LANGUAGE: javascript
+CODE:
+[
+	{
+		index: 2, // After the second user message (What about deep learning?) - PRESERVED
+		type: "message",
+		tokensCovered: 240, // ~240 tokens covered (first 3 messages)
+	},
+	{
+		index: 4, // After the third user message (How do neural networks work?) - NEW PLACEMENT
+		type: "message",
+		tokensCovered: 230, // ~230 tokens covered (messages between cache points)
+	},
+]
+
+----------------------------------------
+
+TITLE: Configuration for Additional Exchange with Multiple Cache Points in JavaScript
+DESCRIPTION: Extended configuration that includes two previous cache points when adding another exchange to the conversation. Demonstrates how the system manages multiple cache points across longer conversations.
+
+LANGUAGE: javascript
+CODE:
+const config = {
+	// Same modelInfo and systemPrompt as before
+	messages: [
+		// Previous 6 messages...
+		{ role: "user", content: "Can you explain backpropagation?" }, // ~40 tokens
+		{ role: "assistant", content: "Backpropagation is an algorithm used to train neural networks..." }, // ~170 tokens
+	],
+	usePromptCache: true,
+	// Pass the previous cache point placements from Example 2
+	previousCachePointPlacements: [
+		{
+			index: 2, // After the second user message (What about deep learning?)
+			type: "message",
+			tokensCovered: 240,
+		},
+		{
+			index: 4, // After the third user message (How do neural networks work?)
+			type: "message",
+			tokensCovered: 230,
+		},
+	],
+}
+
+----------------------------------------
+
+TITLE: Multiple Cache Point Placements with N-1 Preservation in JavaScript
+DESCRIPTION: Final output showing how the system manages all available cache points (3 total) by preserving existing points and adding new ones. Demonstrates the N-1 preservation rule for optimal cache utilization in long conversations.
+
+LANGUAGE: javascript
+CODE:
+[
+	{
+		index: 2, // After the second user message (What about deep learning?) - PRESERVED
+		type: "message",
+		tokensCovered: 240, // ~240 tokens covered (first 3 messages)
+	},
+	{
+		index: 4, // After the third user message (How do neural networks work?) - PRESERVED
+		type: "message",
+		tokensCovered: 230, // ~230 tokens covered (messages between cache points)
+	},
+	{
+		index: 6, // After the fourth user message (Can you explain backpropagation?) - NEW PLACEMENT
+		type: "message",
+		tokensCovered: 210, // ~210 tokens covered (messages between cache points)
+	},
+]
+
+----------------------------------------
+
+TITLE: Input Configuration with Previous Cache Points for Token Comparison
+DESCRIPTION: Configuration object showing the setup for Example 4, demonstrating how the algorithm handles the case when new messages have a token count small enough that cache points should not be changed.
+
+LANGUAGE: javascript
+CODE:
+const config = {
+	// Same modelInfo and systemPrompt as before
+	messages: [
+		// Previous 10 messages...
+		{
+			role: "user",
+			content: "Can you explain the difference between supervised and unsupervised learning in detail?",
+		}, // ~80 tokens
+		{
+			role: "assistant",
+			content:
+				"Certainly! Supervised learning and unsupervised learning are two fundamental paradigms in machine learning with..",
+		}, // ~130 tokens
+	],
+	usePromptCache: true,
+	// Pass the previous cache point placements from Example 3
+	previousCachePointPlacements: [
+		{
+			index: 2, // After the second user message
+			type: "message",
+			tokensCovered: 240,
+		},
+		{
+			index: 6, // After the fourth user message
+			type: "message",
+			tokensCovered: 440,
+		},
+		{
+			index: 8, // After the fifth user message
+			type: "message",
+			tokensCovered: 260,
+		},
+	],
+}
+
+----------------------------------------
+
+TITLE: Writing Assertions in VSCode Extension Tests
+DESCRIPTION: Example of using assertions with descriptive messages to clearly indicate test failures.
+
+LANGUAGE: typescript
+CODE:
+assert.ok(condition, "Descriptive message about what failed")
+
+----------------------------------------
+
+TITLE: Initializing AwsBedrockHandler with Cross-Region ARN
+DESCRIPTION: Example of initializing an AWS Bedrock Handler with a cross-region ARN that includes a region prefix. The handler processes an ARN from us-west-2 while configured for us-east-1 region.
+
+LANGUAGE: javascript
+CODE:
+const handler = new AwsBedrockHandler({
+	apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+	awsAccessKey: "ACCESS_KEY",
+	awsSecretKey: "SECRET_KEY",
+	awsRegion: "us-east-1",
+	awsCustomArn:
+		"arn:aws:bedrock:us-west-2:123456789012:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+})
+
+----------------------------------------
+
+TITLE: Cloning Roo Code Repository
+DESCRIPTION: Command to clone the Roo Code repository from GitHub to your local machine. This is the first step for local setup and development of the Roo Code extension.
+
+LANGUAGE: sh
+CODE:
+git clone https://github.com/RooVetGit/Roo-Code.git
+
+----------------------------------------
+
+TITLE: Parsed ARN Result with Cross-Region Inference
+DESCRIPTION: The result object returned by the parseArn method when processing a cross-region ARN. Shows how the region prefix is removed from the model ID and the crossRegionInference flag is set to true.
+
+LANGUAGE: javascript
+CODE:
+{
+  isValid: true,
+  region: "us-west-2",
+  modelType: "inference-profile",
+  modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0", // Note: prefix removed
+  crossRegionInference: true // Detected cross-region
+}
+
+----------------------------------------
+
+TITLE: Cost Model Configuration for Cross-Region ARN
+DESCRIPTION: The resulting cost model configuration after processing a cross-region ARN. Shows how the full ARN is preserved as the ID for inference profiles while using the base model's pricing information.
+
+LANGUAGE: javascript
+CODE:
+{
+  id: "arn:aws:bedrock:us-west-2:123456789012:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0", // Full ARN
+  info: {
+    maxTokens: 4096,
+    contextWindow: 128000,
+    inputPrice: 3,
+    outputPrice: 15,
+    // other model properties...
+  }
+}
+
+----------------------------------------
+
+TITLE: Initializing AwsBedrockHandler with Single-Region ARN
+DESCRIPTION: Example of initializing an AWS Bedrock Handler with a single-region ARN that includes a region-specific prefix (apne3). The handler recognizes this as a non-cross-region setup for ap-northeast-3.
+
+LANGUAGE: javascript
+CODE:
+const handler = new AwsBedrockHandler({
+	apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+	awsAccessKey: "ACCESS_KEY",
+	awsSecretKey: "SECRET_KEY",
+	awsRegion: "ap-northeast-3", // Osaka region
+	awsCustomArn:
+		"arn:aws:bedrock:ap-northeast-3:123456789012:inference-profile/apne3.anthropic.claude-3-5-sonnet-20241022-v2:0",
+})
+
+----------------------------------------
+
+TITLE: Parsed ARN Result with Single-Region Prefix
+DESCRIPTION: The result object returned by the parseArn method when processing an ARN with a single-region prefix. Shows how the region prefix is removed but the crossRegionInference flag is set to false.
+
+LANGUAGE: javascript
+CODE:
+{
+  isValid: true,
+  region: "ap-northeast-3",
+  modelType: "inference-profile",
+  modelId: "anthropic.claude-3-5-sonnet-20241022-v2:0", // Note: prefix removed
+  crossRegionInference: false // Not a cross-region prefix since apne3 maps to a single region
+}
+
+----------------------------------------
+
+TITLE: Cost Model Configuration for Single-Region ARN
+DESCRIPTION: The resulting cost model configuration after processing a single-region ARN. Similar to cross-region case, the full ARN is preserved as the ID for inference profiles while using the base model's pricing information.
+
+LANGUAGE: javascript
+CODE:
+{
+  id: "arn:aws:bedrock:ap-northeast-3:123456789012:inference-profile/apne3.anthropic.claude-3-5-sonnet-20241022-v2:0", // Full ARN
+  info: {
+    maxTokens: 4096,
+    contextWindow: 128000,
+    inputPrice: 3,
+    outputPrice: 15,
+    // other model properties...
+  }
+}
+
+----------------------------------------
+
+TITLE: Defining Directory Structure for VSCode Extension Tests
+DESCRIPTION: Shows the directory structure for the integration tests, including the main test runner and test suite files.
+
+LANGUAGE: plaintext
+CODE:
+e2e/src/
+├── runTest.ts          # Main test runner
+├── suite/
+│   ├── index.ts        # Test suite configuration
+│   ├── modes.test.ts   # Mode switching tests
+│   ├── tasks.test.ts   # Task execution tests
+│   └── extension.test.ts # Extension activation tests
+
+----------------------------------------
+
+TITLE: Configuring Environment Variables for VSCode Extension Tests
+DESCRIPTION: Example of required environment variables to be set in the .env.local file for the tests to run properly, including the OpenRouter API key.
+
+LANGUAGE: plaintext
+CODE:
+OPENROUTER_API_KEY=sk-or-v1-...
+
+----------------------------------------
+
+TITLE: Installing Dependencies for Roo Code
+DESCRIPTION: Command to install all required dependencies for the Roo Code project. This uses a custom npm script that ensures all dependencies are installed for both the extension and webview components.
+
+LANGUAGE: sh
+CODE:
+npm run install:all
+
+----------------------------------------
+
+TITLE: Starting the Roo Code Development Server
+DESCRIPTION: Command to start the webview development server with hot module replacement (HMR). This allows for live updates to the React/Vite application while developing.
+
+LANGUAGE: sh
+CODE:
+npm run dev
+
+----------------------------------------
+
+TITLE: Building Roo Code Extension Package
+DESCRIPTION: Command to build the Roo Code extension as a .vsix package file. This creates an installable extension package in the bin/ directory.
+
+LANGUAGE: sh
+CODE:
+npm run build
+
+----------------------------------------
+
+TITLE: Installing Built Roo Code Extension
+DESCRIPTION: Command to install the built .vsix extension package directly into VS Code. The version number in the filename will vary based on the current version of the extension.
+
+LANGUAGE: sh
+CODE:
+code --install-extension bin/roo-cline-<version>.vsix
+
+----------------------------------------
+
+TITLE: Cloning the Roo Code Repository
+DESCRIPTION: Command to clone the Roo Code repository from GitHub to your local machine.
+
+LANGUAGE: sh
+CODE:
+git clone https://github.com/RooVetGit/Roo-Code.git
+
+----------------------------------------
+
+TITLE: Installing Dependencies for Roo Code
+DESCRIPTION: Command to install all required dependencies for the Roo Code project.
+
+LANGUAGE: sh
+CODE:
+npm run install:all
+
+----------------------------------------
+
+TITLE: Starting the Webview Development Server
+DESCRIPTION: Command to start the Vite/React app with Hot Module Replacement for development.
+
+LANGUAGE: sh
+CODE:
+npm run dev
+
+----------------------------------------
+
+TITLE: Building Roo Code for Distribution
+DESCRIPTION: Command to build the Roo Code extension, producing a .vsix file in the bin/ directory.
+
+LANGUAGE: sh
+CODE:
+npm run build
+
+----------------------------------------
+
+TITLE: Installing the Built Roo Code Extension
+DESCRIPTION: Command to install the built Roo Code extension (.vsix file) directly in Visual Studio Code.
+
+LANGUAGE: sh
+CODE:
+code --install-extension bin/roo-cline-<version>.vsix
+
+----------------------------------------
+
+TITLE: Cloning the Roo Code Repository
+DESCRIPTION: Command to clone the Roo Code repository from GitHub to a local machine for development purposes.
+
+LANGUAGE: sh
+CODE:
+git clone https://github.com/RooVetGit/Roo-Code.git
+
+----------------------------------------
+
+TITLE: Installing Dependencies for Roo Code Development
+DESCRIPTION: Command to install all necessary dependencies for the Roo Code project using npm.
+
+LANGUAGE: sh
+CODE:
+npm run install:all
+
+----------------------------------------
+
+TITLE: Starting the Development Server for Roo Code Webview
+DESCRIPTION: Command to start the development server for the Vite/React-based webview component of Roo Code with Hot Module Replacement (HMR).
+
+LANGUAGE: sh
+CODE:
+npm run dev
+
+----------------------------------------
+
+TITLE: Building a VSIX Package for Roo Code Installation
+DESCRIPTION: Command to build a VSIX extension package for Roo Code that can be installed in VS Code.
+
+LANGUAGE: sh
+CODE:
+npm run build
+
+----------------------------------------
+
+TITLE: Installing Roo Code VSIX Extension in VS Code
+DESCRIPTION: Command to install the built Roo Code VSIX extension package directly in VS Code.
+
+LANGUAGE: sh
+CODE:
+code --install-extension bin/roo-cline-<version>.vsix
+
+----------------------------------------
+
+TITLE: Cloning the Roo Code Repository in Shell
+DESCRIPTION: Command to clone the Roo Code repository from GitHub to a local development environment.
+
+LANGUAGE: sh
+CODE:
+git clone https://github.com/RooVetGit/Roo-Code.git
+
+----------------------------------------
+
+TITLE: Installing Dependencies for Roo Code in Shell
+DESCRIPTION: Command to install all necessary dependencies for the Roo Code project.
+
+LANGUAGE: sh
+CODE:
+npm run install:all
+
+----------------------------------------
+
+TITLE: Starting the Roo Code Development Server in Shell
+DESCRIPTION: Command to start the webview application with Vite/React and Hot Module Replacement for development.
+
+LANGUAGE: sh
+CODE:
+npm run dev
+
+----------------------------------------
+
+TITLE: Building the Roo Code Extension in Shell
+DESCRIPTION: Command to build the Roo Code VS Code extension package (.vsix file).
+
+LANGUAGE: sh
+CODE:
+npm run build
+
+----------------------------------------
+
+TITLE: Installing the Built Roo Code Extension in Shell
+DESCRIPTION: Command to install the built Roo Code extension (.vsix file) directly into VS Code.
+
+LANGUAGE: sh
+CODE:
+code --install-extension bin/roo-cline-<version>.vsix
+
+----------------------------------------
+
+TITLE: Implementing Checkbox UI in SettingsView.tsx
+DESCRIPTION: Code snippet showing how to add a VSCodeCheckbox component for a boolean setting in the SettingsView.tsx file. It binds the component to the state and handler from ExtensionStateContext.
+
+LANGUAGE: typescript
+CODE:
+<VSCodeCheckbox
+  checked={multisearchDiffEnabled}
+  onChange={(e: any) => setMultisearchDiffEnabled(e.target.checked)}
+>
+  <span style={{ fontWeight: "500" }}>Enable multi-search diff matching</span>
+</VSCodeCheckbox>
+
+----------------------------------------
+
+TITLE: Adding postMessage for Checkbox Setting in handleSubmit
+DESCRIPTION: Code snippet demonstrating how to send the checkbox setting value to the extension host when submitting the settings form in SettingsView.tsx.
+
+LANGUAGE: typescript
+CODE:
+vscode.postMessage({ type: "multisearchDiffEnabled", bool: multisearchDiffEnabled })
+
+----------------------------------------
+
+TITLE: Handling Dropdown Setting in ClineProvider.ts Case Statement
+DESCRIPTION: Code snippet demonstrating how to handle a dropdown/select setting message in the setWebviewMessageListener method of ClineProvider.ts. It updates the global state with text value and posts the updated state back to the webview.
+
+LANGUAGE: typescript
+CODE:
+case "preferredLanguage":
+  await this.updateGlobalState("preferredLanguage", message.text)
+  await this.postStateToWebview()
+  break
+
+----------------------------------------
+
+TITLE: Adding postMessage for Dropdown Setting in handleSubmit
+DESCRIPTION: Code snippet demonstrating how to send the dropdown/select setting value to the extension host when submitting the settings form in SettingsView.tsx.
+
+LANGUAGE: typescript
+CODE:
+vscode.postMessage({ type: "preferredLanguage", text: preferredLanguage })
+
+----------------------------------------
+
+TITLE: Running VSCode Integration Tests via npm
+DESCRIPTION: Command to execute the integration tests for the VSCode extension using npm.
+
+LANGUAGE: bash
+CODE:
+npm run test:integration
+
+----------------------------------------
+
+TITLE: Setting Timeouts for Async Operations in VSCode Tests
+DESCRIPTION: Example of defining appropriate timeout and interval values for asynchronous operations in tests.
+
+LANGUAGE: typescript
+CODE:
+const timeout = 30000
+const interval = 1000
+
+----------------------------------------
+
+TITLE: Resetting Extension State in VSCode Tests
+DESCRIPTION: Example of resetting the extension state before or after tests by configuring it to a known state.
+
+LANGUAGE: typescript
+CODE:
+await globalThis.api.setConfiguration({
+	mode: "Ask",
+	alwaysAllowModeSwitch: true,
+})
+
+----------------------------------------
+
+TITLE: Implementing Grading Format for Tests in VSCode Extension
+DESCRIPTION: Example of using a specific grading format in tests to ensure proper evaluation, with a prompt that instructs the model to grade on a scale of 1-10.
+
+LANGUAGE: typescript
+CODE:
+await globalThis.api.startNewTask({
+	text: `Given this prompt: ${testPrompt} grade the response from 1 to 10 in the format of "Grade: (1-10)": ${output} \n Be sure to say 'I AM DONE GRADING' after the task is complete`,
+})
+
+----------------------------------------
+
+TITLE: Configuring extension dependencies in package.json
+DESCRIPTION: This snippet shows how to set up the extension dependency in your package.json file to ensure that the Roo Code extension is activated before your extension.
+
+LANGUAGE: json
+CODE:
+"extensionDependencies": ["rooveterinaryinc.roo-cline"]
+
+----------------------------------------
+
+TITLE: Cloning the Roo Code Repository
+DESCRIPTION: Commands to clone the Roo Code repository from GitHub and navigate into the project directory.
+
+LANGUAGE: sh
+CODE:
+git clone https://github.com/RooVetGit/Roo-Code.git
+cd Roo-Code
+
+----------------------------------------
+
+TITLE: Running Roo Code Evals Setup Script
+DESCRIPTION: Commands to navigate to the evals directory and execute the setup script to initialize the Roo Code evaluation environment.
+
+LANGUAGE: sh
+CODE:
+cd evals
+./scripts/setup.sh
+
+----------------------------------------
+
+TITLE: Generating Database Migration Files in Roo Project
+DESCRIPTION: Command to generate SQL migration files based on changes made to the schema.ts file. This creates new migration files in the drizzle/ directory that can be reviewed before applying.
+
+LANGUAGE: sh
+CODE:
+pnpm db:generate
+
+----------------------------------------
+
+TITLE: Applying Database Migrations in Roo Project
+DESCRIPTION: Command to execute the migration files and apply the database schema changes. Run this after generating and reviewing the migration files.
+
+LANGUAGE: sh
+CODE:
+pnpm db:migrate
+
+----------------------------------------
+
+TITLE: Importing Meta Component from Storybook in JSX
+DESCRIPTION: Imports the Meta component from Storybook blocks, which is used to define metadata for the storybook page.
+
+LANGUAGE: jsx
+CODE:
+import { Meta } from "@storybook/blocks";
+
+----------------------------------------
+
+TITLE: Setting Up Storybook Page Metadata in JSX
+DESCRIPTION: Uses the Meta component to set the title of the storybook page to 'Welcome'.
+
+LANGUAGE: jsx
+CODE:
+<Meta title="Welcome" />
+
+----------------------------------------
+
+TITLE: Output Cache Point Placements for Unchanged Cache Points
+DESCRIPTION: The resulting cache point placements for Example 4, showing that existing cache points are preserved when the new messages have fewer tokens than the smallest gap between cache points.
+
+LANGUAGE: javascript
+CODE:
+[
+	{
+		index: 2, // After the second user message - PRESERVED
+		type: "message",
+		tokensCovered: 240,
+	},
+	{
+		index: 6, // After the fourth user message - PRESERVED
+		type: "message",
+		tokensCovered: 440,
+	},
+	{
+		index: 8, // After the fifth user message - PRESERVED
+		type: "message",
+		tokensCovered: 260,
+	},
+]
+
+----------------------------------------
+
+TITLE: Input Configuration for Cache Point Reallocation Example
+DESCRIPTION: Configuration object for Example 5, demonstrating how the algorithm handles the case when new messages have a token count large enough to warrant reallocation of cache points.
+
+LANGUAGE: javascript
+CODE:
+const config = {
+	// Same modelInfo and systemPrompt as before
+	messages: [
+		// Previous 10 messages...
+		{
+			role: "user",
+			content: "Can you provide a detailed example of implementing a neural network for image classification?",
+		}, // ~100 tokens
+		{
+			role: "assistant",
+			content:
+				"Certainly! Here's a detailed example of implementing a convolutional neural network (CNN) for image classification using TensorFlow and Keras...",
+		}, // ~300 tokens
+	],
+	usePromptCache: true,
+	// Pass the previous cache point placements from Example 3
+	previousCachePointPlacements: [
+		{
+			index: 2, // After the second user message
+			type: "message",
+			tokensCovered: 240,
+		},
+		{
+			index: 6, // After the fourth user message
+			type: "message",
+			tokensCovered: 440,
+		},
+		{
+			index: 8, // After the fifth user message
+			type: "message",
+			tokensCovered: 260,
+		},
+	],
+}
+
+----------------------------------------
+
+TITLE: Output Cache Point Placements with Reallocation
+DESCRIPTION: The resulting cache point placements for Example 5, showing how the algorithm reallocates cache points when new messages have significantly more tokens than the smallest gap threshold.
+
+LANGUAGE: javascript
+CODE:
+[
+	{
+		index: 2, // After the second user message - PRESERVED
+		type: "message",
+		tokensCovered: 240,
+	},
+	{
+		index: 6, // After the fourth user message - PRESERVED
+		type: "message",
+		tokensCovered: 440,
+	},
+	{
+		index: 10, // After the sixth user message - NEW PLACEMENT
+		type: "message",
+		tokensCovered: 660, // Tokens from messages 7 through 10 (260 + 400)
+	},
+]
+
+----------------------------------------
+
+TITLE: Visualizing Stream Processing Flow with Prompt Router
+DESCRIPTION: A sequence diagram illustrating how model information is processed during stream handling when a prompt router is used, showing the flow from stream event processing to model identification.
+
+LANGUAGE: mermaid
+CODE:
+sequenceDiagram
+    participant createMessage
+    participant parseArn
+    participant getModelById
+
+    createMessage->>parseArn: Process stream event with invokedModelId
+    parseArn->>parseArn: Extract modelId
+    parseArn-->>createMessage: Return invokedModelArn
+    createMessage->>getModelById: Call getModelById with invokedModelArn.modelId
+    getModelById-->>createMessage: Return invokedModel
+    createMessage->>createMessage: Set invokedModel.id = modelConfig.id
+    createMessage->>createMessage: Set this.costModelConfig = invokedModel
+
+----------------------------------------
+
+TITLE: Initializing Bedrock Handler with Custom ARN for Foundation Model
+DESCRIPTION: Example code showing how to initialize the AWS Bedrock handler with a custom ARN for a foundation model. This allows specifying the exact resource path for model access.
+
+LANGUAGE: javascript
+CODE:
+const handler = new AwsBedrockHandler({
+	apiModelId: "anthropic.claude-3-5-sonnet-20241022-v2:0",
+	awsAccessKey: "ACCESS_KEY",
+	awsSecretKey: "SECRET_KEY",
+	awsRegion: "us-east-1",
+	awsCustomArn: "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
+})
+
+----------------------------------------
+
+TITLE: Example Stream Event with Prompt Router invokedModelId
+DESCRIPTION: Sample JSON structure showing a stream event with prompt router information, including the invokedModelId and token usage data. This represents the event data during stream processing.
+
+LANGUAGE: javascript
+CODE:
+{
+  trace: {
+    promptRouter: {
+      invokedModelId: "arn:aws:bedrock:us-west-2:123456789012:inference-profile/anthropic.claude-3-5-sonnet-20241022-v2:0",
+      usage: {
+        inputTokens: 150,
+        outputTokens: 250
+      }
+    }
+  }
+}
