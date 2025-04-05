@@ -1,0 +1,145 @@
+### Issues
+
+-   **Issue:**
+
+    -   **Description:** Forgets to test changes after each subtask (or within a subtask)
+    -   **Expected Behavior:** Tests changes after each subtask (or within a subtask) or at the end of a loop, change, fix, or feature
+    -   **Actual Behavior:** Proceeds to next subtask without testing
+
+-   SHOULD include:
+
+    -   1. More frequent reviews of implemented changes (after each subtask, review the changes; possibly test the changes)
+    -   2. Must include an "anchoring" step by Search Agent (ground in the "current state")
+    -   3. Encourage larger subtasks, delegated to dedicated coordinators (e.g. Offensive Coordinator, Defensive Coordinator, Special Teams Coordinator) who can spin off smaller subtasks to other agents
+
+-   MUST include the following:
+    -   1. Testing at the end of a loop, change, fix, or feature (directive for each coordinating agent)
+    -   2.
+
+### Optimizations
+
+-   1. Split orchestartor into multiple agents
+    -   Franchise Owner (CEO) -- HUMAN
+        -   **Purpose:** Sets the high level product vision, strategy, goals, and roadmap (works with Assistant to maintain a living document)
+        -   **Input:** Market research, user feedback, vibes, etc.
+        -   **Functions:**
+            -   Sets the high level product vision, strategy, goals, and roadmap (works with Assistant to maintain a living document)
+            -   Hits "Enter"
+        -   **Output:**
+            -   High level product vision, strategy, goals, and roadmap
+            -   Roster of agents
+    -   Head Coach (Group Product Manager)
+        -   **Purpose:** Coordinates the product development process (i.e. the "game")
+        -   **Input:** Direct from owner, past games, structured feedback, etc.
+        -   **Functions:**
+            -   Assembles the roster (works with Scout, Trainer, etc. to build the team)
+            -   Decides on the game plan (coordinates a full end-to-end product development process or loop)
+            -   Provides feedback to the Offensive Coordinator, Defensive Coordinator, Special Teams Coordinator
+        -   **Output:**
+            -   Roster of agents
+            -   **Game Plan:** a chain of linked workflows that solve the problem, coordinated by each coordinator
+            -   **Feedback:** Structured feedback for the Offensive Coordinator, Defensive Coordinator, Special Teams Coordinator
+        -   **Coordinates with:**
+            -   Assistant
+            -   Scout
+            -   Head Trainer
+            -   Defensive Coordinator
+            -   Special Teams Coordinator
+    -   Offensive Coordinator (Technical Lead)
+        -   **Purpose:** Designs the offensive plays ("net-new" workflows: new feature, experiments, etc.)
+        -   **Input:**
+            -   Game-time direction from Head Coach (high level objective)
+            -   Post-game feedback from Head Coach and/or Owner (structured feedback)
+        -   **Function:**
+            -   Selects the players for the offensive plays (composes the agent team for the )
+            -   Designs the offensive plays ("net-new" workflows: new feature, experiments, etc.)
+            -   Advises quarterback on which plays to use & when to use them
+        -   **Output:**
+            -   Playbook: Curated, global and project-specific offensive plays
+            -   Feedback: Structured agent performance feedback for the Head Trainer
+        -   **Unique Context:**
+            -   Feature requirements, user stories, design & architecture docs, etc.
+        -   **Coordinates with:**
+            -   Head Coach
+            -   Defensive Coordinator
+            -   Special Teams Coordinator
+            -   Head Trainer
+    -   Defensive Coordinator (Security & QA Lead)
+        -   Designs the defensive plays (security, review, test, debug, etc.)
+        -   Selects the players for the defensive plays
+    -   Special Teams Coordinator (DevOps Lead)
+        -   **Purpose:** Designs the special teams plays (build, deploy, publish, update, CI/CD, etc.)
+        -   **Input:**
+            -   Game-time direction from Head Coach (high level objective)
+            -   Post-game feedback from Head Coach and/or Owner (structured feedback)
+        -   **Function:**
+            -   Assembles the Special Teams player roster (i.e. the full roster, plus "sub-teams" for specific plays)
+            -   Designs permanent special teams plays
+            -   Advises trainer on which players need to be trained and on which skills (i.e.)
+            -   Ensures critical steps in subtask loops are not skipped (QB guardrails)
+        -   **Output:**
+            -   Playbook: Curated, global and project-specific special teams plays
+            -   Feedback: Structured feedback for the Head Trainer
+        -   **Unique Insights:**
+            -   Build system, CI/CD pipelines, platform integrations, etc.
+        -   **Coordinates with:** Head Coach, Offensive Coordinator, Defensive Coordinator, Head Trainer
+        -   Selects the players for the special teams plays
+            -   Project-specific agents often live here
+    -   Quarterback (Delivery Manager)
+        -   Selects the plays to run on each drive
+    - General Manager
+        -   **Purpose:** Responsible for the scouting, composition, and overall development of the team (i.e. agents)
+    -   Support Staff
+        -   Head Trainer (Engineering Manager)
+            -   Works with Builder to train new players (i.e. create new agents)
+            -   Works with Scout to define the role of the new player
+        -   Scout
+            -   **Purpose:** Identifies gaps in the team, and suggests players (Agents) to add
+            -   **Input:** Feedback from the game/notes
+            -   **Function:** Creates the seed prompt for the new player (which is passed to the Builder)
+            -   **Output:** Seed prompt for the new player
+            -   **Coordinates with:** Head Coach, Head Trainer
+        -   Position Coach
+            -   **Purpose:** Initial training of the players on game fundamentals and roles
+            -   **Input:**
+                -   Seed prompt from Scout
+                -   Context from Head Coach and/or Owner
+            -   **Function:**
+                -   Defines the role, expertise, and capabilities of the new player (agent)
+                -   Defines the available tools for the agent
+                -   Defines the interaction with other players (i.e. other agents)
+                -   Defines the core responsibilities, workflow, and loop for the new player (agent)
+            -   **Output:**
+                -   Standalone artifacts for the agent (prompt, tools, workflow, loop, etc.)
+                -   JSON configuration for the agent
+            -   **Coordinates with:** Head Coach, Head Trainer
+        -   Performance Coach
+            -   **Purpose:** Works with Head Trainer to improve the players
+            -   **Input:** Feedback from the game/notes
+            -   **Function:** Take in feedback from coordinators, identify the root cause of the issue, and optimize the agent prompt
+            -   **Output:** Optimized agent prompts
+            -   **Coordinates with:** Head Trainer, Scout
+        -   Roster Manager
+            -   **Purpose:** Manages the roster of players (i.e. agents and their use-cases, configurations, global or project-specific)
+            -   **Input:** 
+            -   **Function:**
+                -   Maintains the record (config) of players, their configurations, and their use-cases
+            -   **Output:** Record of the players, their configurations, and their use-cases
+            -   **Coordinates with:** Head Coach, Offensive Coordinator, Defensive Coordinator, Special Teams Coordinator, Head Trainer
+-   2. Store "playbooks" for each role
+
+    -   Head Coach
+        -   Game plan/strategy:(Test Driven Development) Design, Build, Iterate <-handoff-> Review, Test, Debug, Report <-handoff-> Deploy, Publish, Update
+        -   Team
+    -   Offensive Coordinator
+        -
+    -   Defensive Coordinator:
+        -   (QA Loop) Review, Test, Debug, Report
+        -   (Security Audit) Security Review, Security Test, Security Debug, Security Report
+    -   Special Teams Coordinator
+        -   (Publish Loop) Build, Deploy, Package, CI/CD
+        -   (Feedback Loop) Ingest, Process, Analyze, Suggest
+        -   (Documentation Loop) Review, Document, Publish, Distribute
+        -   (Playbook Loop) Design, Build, Iterate <-handoff-> Review, Test, Debug, Report <-handoff-> Deploy, Publish, Update
+
+-   3.
