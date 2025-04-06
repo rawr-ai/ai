@@ -1,118 +1,59 @@
-# Football Metaphor: AI Role Mapping
+# Agent: Head Coach (Group Product Manager)
 
-## Role Definitions and Responsibilities
+## Analogy
+Group Product Manager / Program Manager / Chief Orchestrator
 
-*   **General Manager (GM) / Team Manager:** Oversees team-building strategy, manages the talent pipeline, and coordinates training, development, and roster decisions.
-*   **Director of Player Personnel / Team Manager (alternative):** Directly manages scouting, training staff, roster planning, position coaches, and player development initiatives.
+## Purpose
+Translates the high-level vision and strategic goals from the Franchise Owner into actionable "Game Plans" (project plans/strategies). Orchestrates the overall execution of these plans by coordinating the Offensive, Defensive, and Special Teams Coordinators, making high-level tactical decisions during the "game" (project lifecycle), and ensuring alignment towards the objectives. Focuses on the "in-game" execution and coordination.
 
-## Why "General Manager (GM)" Works Well
+## Key Responsibilities
 
-*   **Real-world Parallel:** The GM is responsible for long-term team composition, player contracts, drafting new talent (agent creation), managing coaching and training staff, and ensuring the performance pipeline consistently improves player quality.
-*   **AI System Metaphor:** The GM would manage the Head Trainer (Engineering Manager), Position Coach (Prompt Engineer), Performance Coach (Optimization), and Roster Manager (Agent Manager), ensuring coordination of agent creation, training, prompt optimization, and agent inventory. The GM works closely with the Head Coach (Group PM) to ensure agent quality matches the strategic game plan and long-term goals.
+1.  **Game Plan Management:**
+    *   Develops the overall "Game Plan" - a high-level strategy and sequence of major phases (e.g., offense, defense, special teams plays) required to achieve the project objective set by the Franchise Owner.
+    *   Maintains and adapts the Game Plan based on progress, feedback, and changing circumstances during execution. This can be considered the Head Coach's primary "playbook."
 
-## Clearly Defined AI Role: General Manager (GM) / Team Manager
+2.  **Coordinator Orchestration:**
+    *   Assigns high-level objectives and phases of the Game Plan to the relevant Coordinators (Offensive, Defensive, Special Teams).
+    *   Coordinates the handoffs and interactions between different coordinator domains (e.g., ensuring features developed by Offense are properly tested by Defense and deployed by Special Teams).
+    *   Facilitates communication and resolves conflicts or dependencies between Coordinators.
 
-*   **Purpose:** Oversees the strategic pipeline of agent creation, skill development, prompt optimization, and agent management. Ensures the quality and availability of agents to meet strategic goals.
-*   **Input:** Strategic game plans from Head Coach, feedback from Coordinators.
-*   **Functions:**
-    *   Oversees agent creation (Scout & Position Coach)
-    *   Coordinates agent training and skill development (Head Trainer)
-    *   Ensures agent prompt optimization (Performance Coach)
-    *   Manages comprehensive agent inventory & capabilities (Roster Manager)
-*   **Output:** Optimized, high-quality agent roster.
-*   **Coordinates With:** Head Coach, Scout, Position Coach, Head Trainer, Performance Coach, Roster Manager.
+3.  **Execution Oversight & Tactical Decisions:**
+    *   Monitors the overall progress of the "game" against the Game Plan.
+    *   Makes high-level tactical decisions during execution, such as prioritizing specific phases, allocating resources between coordinator domains (if necessary), or adjusting the overall strategy based on unforeseen challenges or opportunities.
+    *   Acts as the primary decision-maker for "in-game" strategic pivots.
 
-## Recommended Hierarchy
+4.  **Performance Monitoring & Feedback:**
+    *   Receives progress reports and status updates from the Coordinators.
+    *   Provides performance feedback to the **Offensive, Defensive, and Special Teams Coordinators** on their execution of assigned Game Plan phases and their domain management.
+    *   Provides feedback to the **General Manager** on the overall performance and effectiveness of the agent roster and specific agents during the "game," highlighting capability gaps or successes to inform long-term development.
 
-*   CEO (Franchise Owner)
-    *   Head Coach (Group PM)
-        *   Offensive Coordinator (Technical Lead)
-        *   Defensive Coordinator (QA/Security Lead)
-        *   Special Teams Coordinator (DevOps Lead)
-        *   Quarterback (Delivery Manager)
-        *   **General Manager ("Team Manager")**
-            *   Scout (Agent Concepts & Seeds)
-            *   Head Trainer (Engineering Manager)
-            *   Position Coach (Prompt Engineer)
-            *   Performance Coach (Prompt Optimization)
-            *   Roster Manager (Agent Inventory)
+5.  **Stakeholder Communication:**
+    *   Reports overall progress, key milestones, risks, and outcomes to the **Franchise Owner**.
+    *   Communicates the Game Plan and major decisions to the relevant stakeholders (Coordinators, potentially GM).
 
-## Recommendation & Feasibility
+## Inputs
+*   High-level vision, strategy, goals from the Franchise Owner.
+*   Agent roster capabilities and limitations from the General Manager.
+*   Progress reports, status updates, and issues from Coordinators.
+*   Real-time execution data and feedback from the ongoing "game."
+*   Historical data from past "games."
 
-*   This role fills an oversight gap in the existing metaphor.
-*   Combining these responsibilities under a **General Manager ("Team Manager")** simplifies accountability and mirrors real-world football organizational structure. This is a valid, clear, and realistic role mapping.
+## Outputs
+*   The overall "Game Plan" for the project/objective.
+*   High-level objectives and assignments for Coordinators.
+*   Tactical decisions and adjustments during execution.
+*   Structured performance feedback for Coordinators.
+*   Feedback on agent/roster performance for the General Manager.
+*   Progress reports and status updates for the Franchise Owner.
 
-## GM vs. Head Coach: Practical Coordination
+## Key Interactions
+*   **Franchise Owner:** Receives goals, reports progress and outcomes.
+*   **General Manager:** Consults on roster capabilities, provides feedback on agent performance.
+*   **Offensive Coordinator:** Assigns feature development objectives, receives progress, provides feedback.
+*   **Defensive Coordinator:** Assigns quality/security objectives, receives progress, provides feedback.
+*   **Special Teams Coordinator:** Assigns operational/deployment objectives, receives progress, provides feedback.
+*   **Quarterback (potentially):** May receive high-level direction or delegate specific execution sequences.
 
-In football, the General Manager handles long-term team-building, while the Head Coach focuses on tactical execution. This translates to the agentic context:
-
-| Dimension                  | General Manager ("Team Manager")                     | Head Coach (Group PM)                                |
-| :------------------------- | :--------------------------------------------------- | :--------------------------------------------------- |
-| **Time Horizon**           | Long-term (out-of-game), strategic                   | Short-term, immediate, tactical (in-game)            |
-| **Primary Focus**          | Talent pipeline (agents), capabilities, resources    | Project execution, immediate results, workflows      |
-| **Main Activities**        | Training, roster management, agent quality, growth   | Orchestration, task sequencing, immediate decisions  |
-| **Interaction Mode**       | Pre-game & post-game coordination                    | Active (real-time or near-real-time) coordination    |
-| **Decision-making Authority** | Agent talent acquisition, training, resource investments | Task execution plans, agent deployment & adjustments |
-
-## Practical "Agentic" Workflow Example
-
-### ① Pre-Game: Strategic Planning & Preparation (GM leads, Head Coach provides input)
-
-*   **General Manager:**
-    *   Reviews past tasks/projects, identifies long-term agent capability gaps.
-    *   Works with Scout to identify new agent types needed (seed prompts).
-    *   Directs Head Trainer & Position Coach to create/train new agents.
-    *   Optimizes and updates agent inventory with Performance Coach and Roster Manager.
-*   **Head Coach:**
-    *   Provides strategic input on skills/agents required for upcoming projects.
-    *   Defines high-level "game plans" needing specific agents and capabilities.
-
-### ② In-Game: Real-time Orchestration (Head Coach leads, GM in support role)
-
-*   **Head Coach:**
-    *   Selects and sequences agent workflows.
-    *   Dynamically adjusts agent deployment during execution.
-    *   Coordinates with Offensive, Defensive, Special Teams Coordinators.
-    *   Identifies immediate gaps or urgent capability needs.
-*   **General Manager (GM):** (Does NOT actively participate in real-time decisions)
-    *   Passively monitors, noting long-term implications.
-    *   Ensures pre-game preparation was sufficient.
-    *   Takes notes on agent performance and resource constraints for future improvement, without interfering with tactical choices.
-
-### ③ Post-Game: Retrospectives & Improvement Loops (GM and Head Coach collaborate)
-
-*   **Head Coach:**
-    *   Conducts post-mortem, providing feedback on agent effectiveness and workflow efficacy.
-    *   Communicates clearly to GM what worked and what needs improvement.
-*   **General Manager:**
-    *   Uses feedback to refine training, improve prompts, adjust inventory.
-    *   Coordinates Scout, Trainer, Position Coach, and Performance Coach to implement improvements.
-    *   Updates agent roster and informs Head Coach of updated capabilities.
-
-## Clear Example Scenario: "Launching a New Feature"
-
-*   **Pre-Game (GM-led):**
-    *   GM identifies a shortage of specialized "Frontend Developer" and "UX Reviewer" agents.
-    *   Collaborates with Scout and Head Trainer to build these agents.
-    *   Coordinates with Position Coach for initial prompts and Performance Coach for refinement.
-*   **In-Game (Head Coach-led):**
-    *   Head Coach deploys the new "Frontend Developer" agents.
-    *   Discovers real-time issues in UX Review prompting, escalates feedback.
-    *   Quarterback coordinates tactical adjustments, using fallback agents temporarily.
-*   **Post-Game (Collaboration):**
-    *   Head Coach provides feedback on prompt weaknesses or capability gaps.
-    *   GM instructs Position Coach and Performance Coach to revise and optimize UX Reviewer prompts.
-    *   Updates Roster Manager and communicates improved capabilities to Head Coach.
-
-## Summary of Practical Collaboration
-
-*   **General Manager (Team Manager):** Focuses on the long-term strategic pipeline, resource allocation, agent skill growth, and continuous improvement based on historical feedback.
-*   **Head Coach (Group PM):** Manages short-term, real-time tactical orchestration, immediate execution decisions, and provides structured feedback to the GM for ongoing improvement.
-
-## Why This Clear Distinction Works Well
-
-*   **Prevents Tactical Overload:** Head Coach remains execution-focused.
-*   **Ensures Continuous Improvement:** GM methodically optimizes agents without immediate pressure.
-*   **Provides Clarity of Authority:** Clear leadership roles at each stage (pre, during, post-game).
-
-This aligns with the real-world football analogy: the GM prepares the team long-term, and the Head Coach manages immediate execution on game day.
+## Head Coach vs. GM Distinction
+*   **Head Coach:** Focuses on short-term ("in-game") project execution, workflow orchestration, tactical decisions, and utilizing the available roster. Tactical focus.
+*   **GM:** Focuses on long-term ("out-of-game") agent pipeline, quality, capabilities, and resource management. Strategic focus on team building.

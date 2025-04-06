@@ -1,10 +1,13 @@
 ### Issues
 
 -   **Issue:**
-
     -   **Description:** Forgets to test changes after each subtask (or within a subtask)
     -   **Expected Behavior:** Tests changes after each subtask (or within a subtask) or at the end of a loop, change, fix, or feature
     -   **Actual Behavior:** Proceeds to next subtask without testing
+-   **Issue:**
+    -   **Description:** Orchestrator analyzes and designs solutions instead of delegating to an agent that can do the analysis and design
+    -   **Expected Behavior:** Switches to an agent that can do the analysis before putting together a workflow
+    -   **Actual Behavior:** Attempts to do analysis on its own in order to construct a workflow instead of switching to an agent that can do the analysis first
 
 -   SHOULD include:
 
@@ -14,7 +17,7 @@
 
 -   MUST include the following:
     -   1. Testing at the end of a loop, change, fix, or feature (directive for each coordinating agent)
-    -   2.
+    -   2. Agents that generate documentation, plans, or other artifacts should hand-off writing to the Implementation agent WITHIN their subtask before returning control to their orchestrator (rather than passing the entire context to the orchestrator and asking them to invoke another agent to write the artifact)
 
 ### Optimizations
 
@@ -91,7 +94,7 @@
         -   **Purpose:** Responsible for the scouting, composition, and overall development of the team (i.e. agents)
     -   Support Staff
         -   Head Trainer (Engineering Manager)
-            -   Works with Builder to train new players (i.e. create new agents)
+            -   Coordinates with Position Coach on agent design and Roster Manager on configuration
             -   Works with Scout to define the role of the new player
         -   Scout
             -   **Purpose:** Identifies gaps in the team, and suggests players (Agents) to add
@@ -99,20 +102,16 @@
             -   **Function:** Creates the seed prompt for the new player (which is passed to the Builder)
             -   **Output:** Seed prompt for the new player
             -   **Coordinates with:** Head Coach, Head Trainer
-        -   Position Coach
-            -   **Purpose:** Initial training of the players on game fundamentals and roles
+        -   Position Coach (Agent Designer)
+            -   **Purpose:** Designs the agent's role, prompt, and capabilities.
             -   **Input:**
                 -   Seed prompt from Scout
                 -   Context from Head Coach and/or Owner
             -   **Function:**
-                -   Defines the role, expertise, and capabilities of the new player (agent)
-                -   Defines the available tools for the agent
-                -   Defines the interaction with other players (i.e. other agents)
-                -   Defines the core responsibilities, workflow, and loop for the new player (agent)
+                -   Defines the role, expertise, capabilities, core responsibilities, workflow, and loop for the new player (agent) via a prompt/design document.
             -   **Output:**
-                -   Standalone artifacts for the agent (prompt, tools, workflow, loop, etc.)
-                -   JSON configuration for the agent
-            -   **Coordinates with:** Head Coach, Head Trainer
+                -   Standalone design artifact for the agent (prompt, workflow description, etc.).
+            -   **Coordinates with:** Head Coach, Head Trainer, Roster Manager
         -   Performance Coach
             -   **Purpose:** Works with Head Trainer to improve the players
             -   **Input:** Feedback from the game/notes
