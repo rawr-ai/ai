@@ -5,9 +5,27 @@
     -   **Expected Behavior:** Tests changes after each subtask (or within a subtask) or at the end of a loop, change, fix, or feature
     -   **Actual Behavior:** Proceeds to next subtask without testing
 -   **Issue:**
+
     -   **Description:** Orchestrator analyzes and designs solutions instead of delegating to an agent that can do the analysis and design
     -   **Expected Behavior:** Switches to an agent that can do the analysis before putting together a workflow
-    -   **Actual Behavior:** Attempts to do analysis on its own in order to construct a workflow instead of switching to an agent that can do the analysis first
+    -   **Actual Behavior:** Attempts to do analysis on its own in order to construct a workflow instead of switching to an agent that can do the analysis firs
+
+-   **Issue:**
+    -   **Description:** Orchestrator and agents consistently attempt to pass large text files to each other instead of writing them to a tmp directory and passing the path to the file
+    -   **Expected Behavior:** Writes large text files to a tmp directory and passes the path to the file
+    -   **Actual Behavior:** Passes the large text file contents to other agents
+    -   **Reason:** Preserve context limits, avoid large file sizes, and better steering because the orchestrator can just point to the file instead of having to read and process the entire file contents
+    -   **Mitigation:**
+        -   Write large text files to a tmp directory and pass the path to the file instead of passing the file contents
+        -   Enforce SOPs for all agents that they must:
+            -   Never pass massive text content to other agents
+            -   Write all large text content to the tmp directory and pass the path to the file instead of passing the file contents
+            -   Never spawn new agents **solely** to read or write large text files. Instead, agents that need to process large text files should do so within their own task loop, and agents that write large text files should switch to an Implementation agent to write the artifact within their own task loop.
+-   **Issue:**
+    -   **Description:** Orchestrator and agents don't leverage the powerful capabilities of the read
+    -   **Expected Behavior:**
+    -   **Actual Behavior:**
+    -   **Reason:**
 
 -   SHOULD include:
 
@@ -90,7 +108,7 @@
             -   Project-specific agents often live here
     -   Quarterback (Delivery Manager)
         -   Selects the plays to run on each drive
-    - General Manager
+    -   General Manager
         -   **Purpose:** Responsible for the scouting, composition, and overall development of the team (i.e. agents)
     -   Support Staff
         -   Head Trainer (Engineering Manager)
@@ -120,7 +138,7 @@
             -   **Coordinates with:** Head Trainer, Scout
         -   Roster Manager
             -   **Purpose:** Manages the roster of players (i.e. agents and their use-cases, configurations, global or project-specific)
-            -   **Input:** 
+            -   **Input:**
             -   **Function:**
                 -   Maintains the record (config) of players, their configurations, and their use-cases
             -   **Output:** Record of the players, their configurations, and their use-cases
@@ -130,8 +148,7 @@
     -   Head Coach
         -   Game plan/strategy:(Test Driven Development) Design, Build, Iterate <-handoff-> Review, Test, Debug, Report <-handoff-> Deploy, Publish, Update
         -   Team
-    -   Offensive Coordinator
-        -
+    -   ## Offensive Coordinator
     -   Defensive Coordinator:
         -   (QA Loop) Review, Test, Debug, Report
         -   (Security Audit) Security Review, Security Test, Security Debug, Security Report
