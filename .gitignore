@@ -1,0 +1,33 @@
+# General project ignores
+.DS_Store
+node_modules/
+build/
+dist/
+logs/
+*.log
+tmp/
+temp/
+tmp/**/*
+*.swp
+*.swo
+.vscode/
+.idea/
+*.iml
+.env
+
+# OS generated files #
+######################
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors (remove all editor specific files) #
+##############################################
+*.sln
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
