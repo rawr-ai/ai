@@ -1,0 +1,10 @@
+# Configuration for project: ai
+services:
+  - id: ai  # Service ID (used for default naming)
+    # container_name: "custom-name"  # Optional: Specify custom container name
+    # port_default: 8001             # Optional: Specify custom host port
+    group_id: "ai"       # Graph group ID
+    entities_dir: "entities"           # Relative path to entity definitions within ai/graph
+    environment:                     # Optional: Add non-secret env vars here
+      GRAPHITI_LOG_LEVEL: "info"
+    sync_cursor_mcp_config: true   # Automatically update .cursor/mcp.json during 'compose'

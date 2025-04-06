@@ -141,4 +141,4 @@
         -   (Documentation Loop) Review, Document, Publish, Distribute
         -   (Playbook Loop) Design, Build, Iterate <-handoff-> Review, Test, Debug, Report <-handoff-> Deploy, Publish, Update
 
--   3.
+-   3. If an agent is asked to present findings, insights, files, documents, etc. they should do so by switching to an Implementation agent to write the artifact within their own task loop. When that's done, the agent should call attempt_completion and point to the artifact location. This is ESPECIALLY important for large documents, files, etc. We don't want super small .md files created everywhere, but for the large ones we can use a tmp directory in ./.ai/tmp/
