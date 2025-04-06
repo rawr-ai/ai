@@ -1,0 +1,54 @@
+```mermaid
+graph TD
+    subgraph WF1 [Workflow: create-diagram-agent]
+        direction LR
+        W1_P1["Phase 1: Setup"] --> W1_P1_S1["Create Branch<br/>feat/create-diagram-agent"]
+        W1_P1_S1 --> W1_P1_S2["Review Plan"]
+        W1_P1_S2 --> W1_P2["Phase 2: Agent Definition"]
+        W1_P2 --> W1_P2_S1["Commit<br/>agents/architect/agent_diagram.md"]
+        W1_P2_S1 --> W1_P3["Phase 3: SOP Update"]
+        W1_P3 --> W1_P3_S1["Read SOPs"]
+        W1_P3_S1 --> W1_P3_S2["Define Changes"]
+        W1_P3_S2 --> W1_P3_S3["Update SOP File"]
+        W1_P3_S3 --> W1_P3_S4["Commit SOP Update"]
+        W1_P3_S4 --> W1_P4["Phase 4: Finalization"]
+        W1_P4 --> W1_P4_S1["Merge Branch"]
+        W1_P4_S1 --> W1_P4_S2["Log Development"]
+    end
+
+    subgraph WF2 [Workflow: configure-diagram-agent-and-update-orchestrator-v5]
+        direction LR
+        W2_P1["Phase 1: Update Orchestrator Prompt"] --> W2_P1_Sub["Delegate Sub-Workflow:<br/>Update Prompt"]
+            subgraph W2_P1_SubGraph [Update Prompt Sub-Workflow]
+                direction LR
+                W2_P1_Sub_S1["Read Prompt File"] --> W2_P1_Sub_S2["Update Prompt"]
+                W2_P1_Sub_S2 --> W2_P1_Sub_S3["Commit Prompt File"]
+            end
+        W2_P1_Sub --> W2_P2["Phase 2: Generate JSON Update Instructions"]
+        W2_P2 --> W2_P2_Sub["Delegate Sub-Workflow:<br/>Generate JSON Instructions"]
+            subgraph W2_P2_SubGraph [Generate JSON Instructions Sub-Workflow]
+                direction LR
+                W2_P2_Sub_S1["Read Files"] --> W2_P2_Sub_S2["Generate Manual Instructions"]
+            end
+        W2_P2_Sub --> W2_P3["Phase 3: Confirmation & Diagramming"]
+        W2_P3 --> W2_P3_S1["Ask User Confirmation"]
+        W2_P3_S1 --> W2_P3_S2["Generate Workflow Diagram<br/>(This Step)"]
+        W2_P3_S2 --> W2_P3_S3["Write Diagram File"]
+        W2_P3_S3 --> W2_P3_S4["Commit Diagram File"]
+        W2_P3_S4 --> W2_P4["Phase 4: Finalization & Logging"]
+        W2_P4 --> W2_P4_S1["Merge Branch<br/>feat/configure-diagram-agent-v3"]
+        W2_P4_S1 --> W2_P4_S2["Log Development"]
+    end
+
+    %% Styling (Optional, for clarity)
+    style W1_P1 fill:#f9f,stroke:#333,stroke-width:2px
+    style W1_P2 fill:#f9f,stroke:#333,stroke-width:2px
+    style W1_P3 fill:#f9f,stroke:#333,stroke-width:2px
+    style W1_P4 fill:#f9f,stroke:#333,stroke-width:2px
+    style W2_P1 fill:#ccf,stroke:#333,stroke-width:2px
+    style W2_P2 fill:#ccf,stroke:#333,stroke-width:2px
+    style W2_P3 fill:#ccf,stroke:#333,stroke-width:2px
+    style W2_P4 fill:#ccf,stroke:#333,stroke-width:2px
+    style W2_P1_Sub fill:#eef,stroke:#669,stroke-width:1px,stroke-dasharray: 5 5
+    style W2_P2_Sub fill:#eef,stroke:#669,stroke-width:1px,stroke-dasharray: 5 5
+```
