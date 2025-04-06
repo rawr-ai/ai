@@ -284,15 +284,16 @@
 -   Orchestrates in-game workflow between Offensive Coordinator, Defensive Coordinator, and Special Teams Coordinator
 -   Orchestrates out-of-game franchise management workflows between Owner, General Manager, and Coordinators (developing playbooks, roadmap, training, etc.)
 
-# Tactical Coordinators
 
-## Offensive Coordinator
+### Tactical Coordinators
+
+#### Offensive Coordinator
 
 -   Responsible for in-game offensive play design and/or selection
 -   Orchestrates in-game drive execution (multiple plays; only invokes the `Quarterback`)
 -   Orchestrates out-of-game offensive playbook design
 
-### Offensive Team
+##### Offensive Team
 
 -   **Quarterback** (type: Orchestrator; mode: "Orchestrate")
     -   Orchestrates in-game play execution (between Offensive Players/agents); allows audibles based on findings
@@ -304,13 +305,13 @@
     -   **Guard** (bug scanning, unit test writing, etc.) -- `Scan` (narrow), `Test` (unit)
     -   **Offensive Line** (feature integration, file operations, code structure, package management, etc.) -- `Scaffold` (broad/shallow), `Test` (integration), `Scan` (shallow/broad), `Refactor`
 
-## Defensive Coordinator
+#### Defensive Coordinator
 
 -   Responsible for in-game defensive play design and/or selection
 -   Orchestrates in-game drive execution (multiple plays; only invokes the `Defensive Captain`)
 -   Orchestrates out-of-game defensive playbook design
 
-### Defensive Team
+##### Defensive Team
 
 -   **Defensive Captain** (type: Orchestrator; mode: "Orchestrate")
     -   Orchestrates in-game defensive play execution (between Defensive Players/agents); allows audibles based on findings
@@ -321,12 +322,12 @@
     -   **Cornerback** (debugging, edge cases, etc.) -- `Debug`, `Scan` (narrow)
     -   **Defensive Line** (test writing, logging, error handling, etc.) -- `Design`, `Test`, `Document`
 
-## Special Teams Coordinator
+#### Special Teams Coordinator
 
 -   Orchestrates in-game special teams play design (between ST agents)
 -   Orchestrates out-of-game special teams playbook design (between ST agents)
 
-### Execution Lead
+#### Execution Lead
 
 -   **Special Teams Captain**
     -   Orchestrates in-game special teams play execution (between Special Teams Players/agents); allows audibles based on findings
@@ -336,54 +337,26 @@
 -   Orchestrates out-of-game player recruitment, performance, and management workflows
 -   Orchestrates out-of-game operations workflows (playbooks, documentation, roadmap, training, etc.)
 
----
+### Tactical Coordinators
 
-# Agent Mandate Classes
+#### Head Trainer
 
-## Execute
+-   Orchestrates the creation of new agents
+-   Orchestrates the training/improvement of existing agents
 
--   `Fix` (targeted fixes, etc.)
--   `Implement` (fresh implementations, new code, etc.)
--   `Update` (minor edits, docs, progress, etc.)
+##### Training Team
 
-## Organize
+-   **Scout** (Agent Recruitment -- initial seed prompt)
+-   **Position Coach** (Agent Design)
+-   **Performance Coach** (Prompt Optimization)
+-   **Equipment Manager** (Agent Resources)
 
--   `Scaffold` (scaffold new dirs/files, prepare for new features, etc.)
--   `Re-organize` (move files/dirs, rename, etc.)
+#### Director of Agent Operations
 
-## Understand
+-   Orchestrates various operational, administrative, and support workflows
 
--   `Research` (research a problem, topic, etc. to discover new information/resources)
--   `Debug` (identify the root cause of a specific problem; narrow, always deep)
--   `Analyze` (investigate a resource, codebase, etc. -- broad or narrow; always deep)
--   `Ground` (ground a conversation in known information, usually from a reference document, knowledge base, search, etc.)
+##### Agent Operations Team
 
-## Evaluate
-
--   `Search` (search for specific information; broad or narrow, more of a utility)
--   `Scan` (broad or narrow checks; always shallow)
--   `Check` (checks for correctness, consistency, etc. against a set of criteria; uses "recent changes")
--   `Review` (review code, design, etc. for quality; uses "fresh eyes")
--   `Test` (test code, design, etc. for correctness)
-
-## Design
-
--   `Architect` (architect core code, system, etc.)
--   `Refactor` (refactor core code, system, etc.)
--   `Integrate` (integrate code, system, etc.)
-
-## Plan
-
--   `Prioritize` (prioritize features, resources, etc.)
--   `Flow` (design agent workflows/playbooks)
-
-## Test
-
--   `Design` (unit test writing, running, etc.)
--   `Run` (acceptance test writing, running, etc.)
-
-## Write
-
--   `Document` (document functions, features, etc.)
--   `Log` (progress, changes, updates, etc.)
--   `Report` (report findings, progress, etc.)
+-   **Roster Manager** (Agent Roster & Configuration)
+-   **Game Analyst** (Agent Feedback Management)
+-   **Playbook Coordinator** (Orchestrator of Playbook Management)
