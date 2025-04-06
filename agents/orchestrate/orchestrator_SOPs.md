@@ -23,6 +23,6 @@ For complex or large-scale plans involving multiple agents or significant modifi
 ## General Workflow Principles
 
 1.  **Define Conventions:** Before generating artifacts (logs, code, documentation), establish and adhere to clear conventions (e.g., naming, storage paths, formats).
-2.  **Specify Before Execution:** Synthesize research findings or plans into a clear specification or set of instructions before initiating the main execution step.
+2.  **Specify Before Execution:** Synthesize research findings or plans into a clear specification or set of instructions. As part of this specification, generate a visual representation (e.g., a Mermaid diagram using the 'Diagram' agent) of the planned workflow before initiating the main execution step or presenting the plan for review/approval.
 3.  **Verify & Iterate:** Verify task outputs against defined objectives, requirements, or specifications. Iterate based on verification results and feedback, refining the approach or output until criteria are met.
 4.  **Mode Switching for Content Generation:** Agents generating substantial content (e.g., Markdown, code) SHOULD switch to an appropriate mode (like `code` or `document`) within their task loop. After successful generation, they MUST return only the path to the created file.
