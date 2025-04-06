@@ -33,14 +33,13 @@ Each object within the `customModes` array should have the following properties:
       "fileRegex": "\\\\.(js|ts)$", // Regex pattern (double-escaped backslashes)
       "description": "JavaScript/TypeScript files only" // Optional description
     }]
-    // Note: "workflow" tools (ask_follow_up_question, attempt_completion, switch_mode, new_task) are generally always available.
+    // Note: "workflow" tools (ask_follow_up_question, attempt_completion, switch_mode, new_task) are generally always available. Their availability is observed/inferred and not explicitly listed in the Custom Modes documentation.
   ],
   "customInstructions": "Follow these specific guidelines...", // Optional: Added to end of system prompt
   "apiConfiguration": { // Optional: Customize AI model/parameters
     "model": "gpt-4",
     "temperature": 0.2
   },
-  "source": "global" // Optional: Indicates origin (e.g., "global", "project") - observed in examples
 }
 ```
 
@@ -51,23 +50,34 @@ Each object within the `customModes` array should have the following properties:
 *   **`roleDefinition` (Required):** Crucial for defining the agent's persona and core function. Placed at the *beginning* of the system prompt.
 *   **`groups` (Required):** An array listing the tool categories the mode can access. See the Tool Use Overview documentation for details on which tools belong to which group (`read`, `edit`, `browser`, `command`, `mcp`).
 *   **`fileRegex` (within `edit` group):** Uses standard regular expressions to filter which files the mode can modify. **Important:** Backslashes in the regex pattern must be double-escaped within the JSON string (e.g., `\.` becomes `\\\\.`).
-*   **`customInstructions` (Optional):** Provides specific rules or guidelines for the mode's behavior. Appended to the *end* of the system prompt. Can be supplemented by placing instructions in a `.roorules-{mode-slug}` file in the project root (these are appended after the JSON instructions).
+*   **`customInstructions` (Optional):** Provides specific rules or guidelines for the mode's behavior. Appended to the *end* of the system prompt. Can be supplemented by placing instructions in a `.roorules-{mode-slug}` file in the project root (these are appended after the JSON instructions). Using a `.roorules` file is beneficial for managing longer instructions, enabling version control, and allowing non-technical users to edit instructions easily.
 *   **`apiConfiguration` (Optional):** Allows specifying different LLM models or parameters (like temperature) for specific modes.
+
+## Regex Usage for `fileRegex`
+
+When defining `fileRegex` patterns, remember:
+
+*   **JSON escaping:** Backslashes must be double-escaped (e.g., `\.` becomes `\\\\.`).
+*   **Common patterns:**
+    *   `\\\\.(js|ts)$`: Matches JavaScript and TypeScript files.
+    *   `\\\\.md$`: Matches Markdown files.
+    *   `\\\\.json$`: Matches JSON files.
+*   **Roo assistance:** Ask Roo to generate the `fileRegex` pattern for you!
 
 ## Examples
 
-The community gallery page (`https://docs.roocode.com/community`) contains several full JSON examples, including:
+The official documentation provides several key JSON examples directly, including:
 
-*   Jest Test Engineer (restricted edit access to test files)
-*   Documentation Writer (edit access to Markdown)
-*   Orchestrator (edit access restricted to mode configuration files like `.roomodes` and `cline_custom_modes.json`)
+*   Basic Documentation Writer
+*   Test Engineer
+*   Project-Specific Mode Override
 
-*(Refer to the scraped content of the community page for the full JSON of these examples).*
+*(Refer to the official documentation for the full JSON of these examples).*
 
 ## Creation Methods
 
 1.  **Ask Roo:** Prompt Roocode directly (e.g., "Create a mode called 'My Mode' that can only read files").
-2.  **Prompts Tab UI:** Use the graphical interface in the Roocode Prompts tab.
+2.  **Prompts Tab UI:** Use the graphical interface in the Roocode Prompts tab. Note that `fileRegex` restrictions currently require manual JSON editing and cannot be set via the Prompts Tab UI.
 3.  **Manual JSON Editing:** Directly edit the `custom_modes.json` (global) or `.roomodes` (project) files.
 
 This guide provides a comprehensive overview based on the available documentation content.
