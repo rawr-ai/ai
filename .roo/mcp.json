@@ -1,3 +1,72 @@
 {
-  "mcpServers": {}
+	"mcpServers": {
+		"repo-readonly": {
+			"command": "node",
+			"args": [
+				"/Users/mateicanavra/Documents/.nosync/DEV/mcp-servers/mcp-filesystem/dist/index.js",
+				"/Users/mateicanavra/Documents/.nosync/DEV/ai",
+				"--no-follow-symlinks",
+				"--readonly"
+			],
+			"alwaysAllow": [
+				"read_file",
+				"read_multiple_files",
+				"list_directory",
+				"directory_tree",
+				"search_files",
+				"find_files_by_extension",
+				"get_file_info",
+				"list_allowed_directories",
+				"get_permissions",
+				"xml_query",
+				"xml_structure",
+				"xml_to_json_string",
+				"json_query",
+				"json_structure",
+				"json_filter",
+				"json_get_value",
+				"json_transform",
+				"json_sample",
+				"json_validate",
+				"json_search_kv"
+			]
+		},
+		"repo-test_full-access": {
+			"command": "node",
+			"args": [
+				"/Users/mateicanavra/Documents/.nosync/DEV/mcp-servers/mcp-filesystem/dist/index.js",
+				"/Users/mateicanavra/Documents/.nosync/DEV/ai/test",
+				"--no-follow-symlinks",
+				"--full-access"
+			],
+			"alwaysAllow": [
+				"read_file",
+				"read_multiple_files",
+				"list_directory",
+				"directory_tree",
+				"search_files",
+				"find_files_by_extension",
+				"get_file_info",
+				"list_allowed_directories",
+				"get_permissions",
+				"xml_query",
+				"xml_structure",
+				"xml_to_json_string",
+				"json_query",
+				"json_structure",
+				"json_filter",
+				"json_get_value",
+				"json_transform",
+				"json_sample",
+				"json_validate",
+				"json_search_kv",
+				"create_file",
+				"create_directory",
+				"move_file",
+				"rename_file",
+				"xml_to_json",
+				"regex_search_content"
+			]
+		}
+	}
 }
