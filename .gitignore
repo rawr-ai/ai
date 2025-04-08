@@ -33,6 +33,13 @@ tmp/**/*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Roo
+.roo/
+.roorules-debug
+
 # MCP
 .cursor/mcp.json
 .roo/mcp.json
+
+# CLI config
+scripts/cli_config.yaml

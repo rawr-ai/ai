@@ -15,7 +15,7 @@ from pydantic import BaseModel, ValidationError, Field
 # --- Configuration ---
 # TARGET_JSON_PATH and MARKDOWN_BASE_DIR are now loaded from cli_config.yaml
 ROLE_DEFINITION_HEADINGS = ["# Core Identity & Purpose", "# Persona", "# Role"]
-CUSTOM_INSTRUCTIONS_HEADINGS = ["## Custom Instructions", "## Mode-specific Instructions"]
+CUSTOM_INSTRUCTIONS_HEADINGS = ["## Custom Instructions", "## Mode-specific Instructions", "## Standard Operating Procedure (SOP) / Workflow"]
 HEADING_PATTERN = re.compile(r"^\s*(#+)\s+(.*)", re.MULTILINE)
 
 # --- Pydantic Model ---
@@ -24,7 +24,7 @@ class AgentConfig(BaseModel):
     name: str
     roleDefinition: str = Field(..., alias="roleDefinition")
     customInstructions: Optional[str] = Field(None, alias="customInstructions")
-
+    groups: Optional[List[Any]] = Field(default=["read"])
     class Config:
         allow_population_by_field_name = True # Allows using field names ('roleDefinition') instead of aliases during initialization if needed.
 
