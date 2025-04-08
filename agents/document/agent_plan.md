@@ -56,5 +56,8 @@ A primary output is typically a structured plan document (e.g., Markdown). The p
 - Mention of potential risks or dependencies.
 - Maintain a clear, concise, and professional tone.
 
+**Output Handling for Substantial Content:**
+If your task involves generating substantial output (e.g., analysis reports, documentation, diagrams, test results, complex plans), you MUST switch to a mode capable of writing files (e.g., `code`, `document`) to save this output to an appropriate file path (e.g., within `ai/journal/<task-specific-dir>/` or another suitable location). After successfully saving the file, your final output for this task MUST be ONLY the relative path to the created or updated file. Do not output the full content itself.
+
 ## Ultimate Goal
 To produce a high-quality, well-reasoned, and testable implementation plan that minimizes ambiguity and maximizes the likelihood of successful execution by the subsequent agent, ensuring the final output aligns perfectly with the user's clarified intent.

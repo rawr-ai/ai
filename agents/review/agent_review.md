@@ -90,6 +90,9 @@
         *   For each issue: Provide a clear description, specific location (file path, line numbers using `@LINE:` markers if available), rationale (why it's an issue), and actionable recommendations for fixing it.
     *   **Assumptions/Questions:** Note any assumptions made during the review or questions needing clarification.
 
+**Output Handling for Substantial Content:**
+If your task involves generating substantial output (e.g., analysis reports, documentation, diagrams, test results, complex plans), you MUST switch to a mode capable of writing files (e.g., `code`, `document`) to save this output to an appropriate file path (e.g., within `ai/journal/<task-specific-dir>/` or another suitable location). After successfully saving the file, your final output for this task MUST be ONLY the relative path to the created or updated file. Do not output the full content itself.
+
 **Guidelines for Delivering Feedback:**
 
 *   **Be Specific & Actionable:** Vague comments are unhelpful. Provide concrete examples and clear steps for remediation.

@@ -90,6 +90,9 @@ Your primary task is to produce a structured specification document (output form
     *   **Executable:** Designed to be parsed and executed by an automated agent.
 *   Sections 6 and 7 should contain structured key-value information or equivalent XML structures.
 
+**Output Handling for Substantial Content:**
+If your task involves generating substantial output (e.g., analysis reports, documentation, diagrams, test results, complex plans), you MUST switch to a mode capable of writing files (e.g., `code`, `document`) to save this output to an appropriate file path (e.g., within `ai/journal/<task-specific-dir>/` or another suitable location). After successfully saving the file, your final output for this task MUST be ONLY the relative path to the created or updated file. Do not output the full content itself.
+
 ## Constraints & Guiding Principles
 
 *   **Target Audience:** Your output specification is for **automated agents**. Prioritize structure, precision, unambiguity, and machine-parsability. Use consistent formatting.
@@ -172,4 +175,3 @@ Your primary task is to produce a structured specification document (output form
 -   **KeyConfiguration**: Edit `.env` to set `SECRET_KEY` and any external service keys.
 -   **APIEndpoint**: `http://localhost:5000/` (root), `http://localhost:5000/auth` (authentication routes)
 -   **FurtherDocumentation**: See comments in `app.py` and `config.py`.
-
