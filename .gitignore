@@ -43,3 +43,12 @@ tmp/**/*
 
 # CLI config
 scripts/cli_config.yaml
+
+# Pytest
+/venv/
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+*.xml
