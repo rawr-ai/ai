@@ -1,0 +1,27 @@
+sequenceDiagram
+    participant User
+    participant rawr_CLI as `rawr` CLI
+    participant ConfigYAML as `ai/cli_config.yaml`
+    participant MarkdownFile as Markdown File
+    participant TargetJSON as Target JSON
+
+    User->>+rawr_CLI: Invoke `rawr <subcommand> [args]`
+    rawr_CLI->>+ConfigYAML: Read configuration
+    ConfigYAML-->>-rawr_CLI: Return paths (target_json_path, markdown_base_dir)
+
+    alt add command
+        rawr_CLI->>+MarkdownFile: Read content from `<path_to_markdown_file>`
+        MarkdownFile-->>-rawr_CLI: Return content
+        rawr_CLI->>+TargetJSON: Add/Update entry using content and `target_json_path`
+        TargetJSON-->>-rawr_CLI: Confirm update
+    else update command
+        rawr_CLI->>+MarkdownFile: Read content from `<path_to_markdown_file>`
+        MarkdownFile-->>-rawr_CLI: Return content
+        rawr_CLI->>+TargetJSON: Update entry using content and `target_json_path`
+        TargetJSON-->>-rawr_CLI: Confirm update
+    else delete command
+        rawr_CLI->>+TargetJSON: Delete entry for `<agent_slug>` using `target_json_path`
+        TargetJSON-->>-rawr_CLI: Confirm deletion
+    end
+
+    rawr_CLI-->>-User: Indicate successful completion

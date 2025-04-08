@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import sys
+import yaml
 import traceback
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Tuple
@@ -12,7 +13,7 @@ from typing import List, Optional, Dict, Any, Tuple
 from pydantic import BaseModel, ValidationError, Field
 
 # --- Configuration ---
-# TARGET_JSON_PATH = Path("ai/graph/plays/custom_modes.json") # Replaced by CLI argument
+# TARGET_JSON_PATH and MARKDOWN_BASE_DIR are now loaded from cli_config.yaml
 ROLE_DEFINITION_HEADINGS = ["# Core Identity & Purpose", "# Persona", "# Role"]
 CUSTOM_INSTRUCTIONS_HEADINGS = ["## Custom Instructions", "## Mode-specific Instructions"]
 HEADING_PATTERN = re.compile(r"^\s*(#+)\s+(.*)", re.MULTILINE)
@@ -207,18 +208,23 @@ def save_configs(json_path: Path, configs: List[AgentConfig]):
 
 
 # --- Core Operations ---
-def add_config(markdown_path_str: str, target_json_path: Path):
+def add_config(markdown_path_str: str, target_json_path: Path, markdown_base_dir: Path):
     """Adds a new agent configuration from a Markdown file."""
-    # --- Add Operation Specific Check ---
-    # For 'add', the target JSON file MUST exist beforehand.
-    if not target_json_path.is_file():
-        error_msg = f"Target JSON file '{target_json_path}' does not exist. Cannot add agent."
-        logging.error(error_msg)
-        # Use sys.exit directly here as this function is called from main's try block
-        sys.exit(1)
-    # --- End Check ---
+    # --- Path Validation ---
+    markdown_path = Path(markdown_path_str).resolve()
+    markdown_base_dir_resolved = markdown_base_dir.resolve()
+    if not str(markdown_path).startswith(str(markdown_base_dir_resolved)):
+        logging.warning(
+            f"Markdown file path '{markdown_path}' is not inside the configured markdown base directory '{markdown_base_dir_resolved}'. "
+            f"Ensure this is intended."
+        )
+        # Consider raising an error if strict containment is required:
+        # raise ValueError(f"Markdown file path '{markdown_path}' must be inside '{markdown_base_dir_resolved}'.")
 
-    markdown_path = Path(markdown_path_str)
+    # --- Add Operation Specific Check ---
+    # For 'add', the target JSON file should ideally exist, but load_configs handles creation if not.
+    # Let's ensure the directory exists though.
+    target_json_path.parent.mkdir(parents=True, exist_ok=True)
     logging.info(f"Attempting to add configuration from: {markdown_path}")
     new_config = parse_markdown(markdown_path)
     configs = load_configs(target_json_path)
@@ -232,10 +238,20 @@ def add_config(markdown_path_str: str, target_json_path: Path):
     logging.info(f"Successfully added agent '{new_config.slug}'.")
 
 
-def update_config(markdown_path_str: str, target_json_path: Path):
+def update_config(markdown_path_str: str, target_json_path: Path, markdown_base_dir: Path):
     """Updates an existing agent configuration from a Markdown file."""
     markdown_path = Path(markdown_path_str)
-    logging.info(f"Attempting to update configuration from: {markdown_path}")
+    logging.info(f"Attempting to update configuration from: {markdown_path_str}")
+    # --- Path Validation ---
+    markdown_path = Path(markdown_path_str).resolve()
+    markdown_base_dir_resolved = markdown_base_dir.resolve()
+    if not str(markdown_path).startswith(str(markdown_base_dir_resolved)):
+        logging.warning(
+            f"Markdown file path '{markdown_path}' is not inside the configured markdown base directory '{markdown_base_dir_resolved}'. "
+            f"Ensure this is intended."
+        )
+        # Consider raising an error if strict containment is required:
+        # raise ValueError(f"Markdown file path '{markdown_path}' must be inside '{markdown_base_dir_resolved}'.")
     updated_config = parse_markdown(markdown_path)
     configs = load_configs(target_json_path)
 
@@ -274,22 +290,46 @@ def main():
     # Basic logging configuration
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-    parser = argparse.ArgumentParser(description="Manage agent configurations based on Markdown definitions.")
-    parser.add_argument("--target-json", type=Path, required=True, help="Path to the target custom_modes.json file.")
+    # --- Load Configuration from YAML ---
+    config_path = Path("ai/cli_config.yaml")
+    if not config_path.is_file():
+        logging.error(f"Configuration file not found: {config_path}")
+        sys.exit(1)
+
+    try:
+        logging.debug(f"Loading configuration from: {config_path}")
+        with open(config_path, 'r', encoding='utf-8') as f:
+            cli_config = yaml.safe_load(f)
+        if not cli_config or 'target_json_path' not in cli_config or 'markdown_base_dir' not in cli_config:
+            logging.error(f"Invalid configuration format in {config_path}. Missing required keys.")
+            sys.exit(1)
+        target_json_path = Path(cli_config['target_json_path']).resolve()
+        markdown_base_dir = Path(cli_config['markdown_base_dir']).resolve()
+        logging.debug(f"Target JSON path loaded: {target_json_path}")
+        logging.debug(f"Markdown base directory loaded: {markdown_base_dir}")
+    except yaml.YAMLError as e:
+        logging.error(f"Error parsing configuration file {config_path}: {e}")
+        sys.exit(1)
+    except Exception as e:
+        logging.error(f"An unexpected error occurred loading configuration: {e}")
+        sys.exit(1)
+
+    # --- Argument Parsing ---
+    parser = argparse.ArgumentParser(prog="rawr", description="Manage agent configurations using definitions from Markdown files.")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose (DEBUG) logging.")
-    subparsers = parser.add_subparsers(dest="operation", required=True, help="Operation to perform")
+    subparsers = parser.add_subparsers(dest="operation", required=True, help="Subcommand to execute")
 
     # Add operation
-    parser_add = subparsers.add_parser("add", help="Add a new agent config from a Markdown file.")
-    parser_add.add_argument("markdown_path", type=str, help="Path to the agent definition Markdown file.")
+    parser_add = subparsers.add_parser("add", help="Add a new agent config from a Markdown file. Fails if slug already exists.")
+    parser_add.add_argument("path_to_markdown_file", type=str, help="Path to the agent definition Markdown file.")
 
     # Update operation
-    parser_update = subparsers.add_parser("update", help="Update an existing agent config from a Markdown file.")
-    parser_update.add_argument("markdown_path", type=str, help="Path to the agent definition Markdown file.")
+    parser_update = subparsers.add_parser("update", help="Update an existing agent config from a Markdown file. Fails if slug does not exist.")
+    parser_update.add_argument("path_to_markdown_file", type=str, help="Path to the agent definition Markdown file.")
 
     # Delete operation
-    parser_delete = subparsers.add_parser("delete", help="Delete an agent config by its slug.")
-    parser_delete.add_argument("slug", type=str, help="Slug of the agent configuration to delete.")
+    parser_delete = subparsers.add_parser("delete", help="Delete an agent config by its slug. Fails if slug does not exist.")
+    parser_delete.add_argument("agent_slug", type=str, help="Slug of the agent configuration to delete.")
 
     # Sync operation (Placeholder - Not fully implemented as per convention doc)
     # parser_sync = subparsers.add_parser("sync", help="Sync configs from a directory of Markdown files.")
@@ -304,16 +344,16 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
         logging.debug("Verbose logging enabled.")
 
-    target_json_path = args.target_json.resolve() # Resolve to absolute path
+    # target_json_path is now loaded from config
     logging.debug(f"Target JSON path resolved to: {target_json_path}")
 
     try:
         if args.operation == "add":
-            add_config(args.markdown_path, target_json_path)
+            add_config(args.path_to_markdown_file, target_json_path, markdown_base_dir)
         elif args.operation == "update":
-            update_config(args.markdown_path, target_json_path)
+            update_config(args.path_to_markdown_file, target_json_path, markdown_base_dir)
         elif args.operation == "delete":
-            delete_config(args.slug, target_json_path)
+            delete_config(args.agent_slug, target_json_path)
         # elif args.operation == "sync":
         #     logging.warning("Sync operation is not fully implemented yet.")
             # sync_configs(args.directory_path, args.delete_stale, target_json_path)
