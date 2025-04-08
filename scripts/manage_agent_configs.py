@@ -291,7 +291,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
     # --- Load Configuration from YAML ---
-    config_path = Path("ai/cli_config.yaml")
+    config_path = Path("scripts/cli_config.yaml")
     if not config_path.is_file():
         logging.error(f"Configuration file not found: {config_path}")
         sys.exit(1)
