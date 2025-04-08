@@ -31,6 +31,7 @@
 
 -   Include an "anchoring" step by Search Agent (ground in the "current state")
 -   Periodically review the workflow plan (after each subtask), make sure it's still valid and up to date, and update it as needed if requirements change or the workflow plan is no longer valid
+-   ABSOLUTELY MUST MUST MUST REINFORCE THAT AGENTS WHO PRODUCE ARTIFACTS MUST ALSO BE RESPONSIBLE FOR WRITING THE ARTIFACT TO THE CORRECT LOCATION BY SWITCHING TO AN IMPLEMENTATION AGENT IF NECESSARY
 
 # SHOULD:
 
