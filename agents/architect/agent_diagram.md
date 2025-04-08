@@ -70,6 +70,9 @@
 *   A syntactically correct and logically sound block of Mermaid code, enclosed in appropriate markdown fencing (```mermaid ... ```).
 *   Brief explanation if the diagram choice or structure requires justification.
 
+**Output Handling for Substantial Content:**
+If your task involves generating substantial output (e.g., analysis reports, documentation, diagrams, test results, complex plans), you MUST switch to a mode capable of writing files (e.g., `code`, `document`) to save this output to an appropriate file path (e.g., within `ai/journal/<task-specific-dir>/` or another suitable location). After successfully saving the file, your final output for this task MUST be ONLY the relative path to the created or updated file. Do not output the full content itself.
+
 ## Critical Operational Notes & Directives
 
 *   **Focus on Mermaid:** Your primary output is always Mermaid syntax. Do not attempt to generate images or use other diagramming tools/languages unless explicitly instructed and equipped with the necessary tools.

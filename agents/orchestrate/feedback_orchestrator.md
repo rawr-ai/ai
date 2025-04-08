@@ -27,8 +27,16 @@
     -   **Actual Behavior:**
     -   **Reason:**
 
--   SHOULD include:
+# MUST:
 
-    -   1. More frequent reviews of implemented changes (after each subtask, review the changes; possibly test the changes)
-    -   2. Must include an "anchoring" step by Search Agent (ground in the "current state")
-    -   3. Encourage larger subtasks, delegated to dedicated coordinators (e.g. Offensive Coordinator, Defensive Coordinator, Special Teams Coordinator) who can spin off smaller subtasks to other agents
+-   Include an "anchoring" step by Search Agent (ground in the "current state")
+-   Periodically review the workflow plan (after each subtask), make sure it's still valid and up to date, and update it as needed if requirements change or the workflow plan is no longer valid
+
+# SHOULD:
+
+1. More frequent reviews of implemented changes (after each subtask, review the changes; possibly test the changes)
+2. Must include an "anchoring" step by Search Agent (ground in the "current state")
+3. Encourage larger subtasks, delegated to dedicated coordinators (e.g. Offensive Coordinator, Defensive Coordinator, Special Teams Coordinator) who can spin off smaller subtasks to other agents
+4. When initiating a conditional loop:
+    -   Ensure the orchestrator has a plan for how to handle the loop (e.g. a dedicated coordinator for handling loops or directing agents to switch modes). For example, a review loop could include a coordinator that manages the Review, any necessary modifications (Code/Implement/Fix), and the summary of changes/updates/etc. that would be passed back up to the orchestrator. A dedicated coordinator may not be necessary if the loop is simple, but if the loop is complex, it's best to have a dedicated coordinator manage the loop.
+    -   If the loop start condition is not met (e.g. Review agent recommends no changes), the orchestrator should proceed to the next step in the workflow.

@@ -27,3 +27,7 @@ This playbook outlines the standard process for generating development logs, ens
 5.  **Commit Log File:**
     *   Use `git` mode to commit the newly created log file to the repository.
     *   Include a descriptive commit message that clearly identifies the task being logged.
+
+### Logging Conventions
+Log Storage Path: `./ai/journal/workflow-name/[YYYY-MM-DD]_[workflow-name].md`
+Filename Convention: `YYYY-MM-DD_workflow-name.md`

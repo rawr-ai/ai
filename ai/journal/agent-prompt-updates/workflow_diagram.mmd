@@ -1,0 +1,58 @@
+```mermaid
+sequenceDiagram
+    participant User
+    participant Git as Git Agent
+    participant Analyze as Analyze Agent
+    participant Code as Code Agent
+    participant Review as Review Agent
+    participant Orchestrator
+
+    User->>Git: Initiate Task 1 (Create Branch)
+    Git-->>User: Branch 'feature/agent-prompt-file-output-directive' created
+
+    User->>Analyze: Initiate Task 2 (Review Plan, Diagram)
+    Analyze-->>User: Plan reviewed (OK), Mermaid Diagram generated
+    Analyze->>Code: Request Mode Switch & Provide Plan/Diagram
+    Note over Analyze, Code: User approves mode switch
+    User->>Code: Confirm Mode Switch
+    Code->>Code: Write workflow_plan.md
+    Code->>Code: Write workflow_diagram.mmd
+    Code-->>User: Output: Paths to plan & diagram files
+
+    User->>Analyze: Initiate Task 3 (Identify Agents)
+    Analyze->>Analyze: Scan agents/, read prompts (excluding orchestrate, meta)
+    Analyze-->>User: Output: List of prompt file paths
+
+    User->>Code: Initiate Task 4 (Modify Prompts)
+    loop For each identified prompt file
+        Code->>Code: Read prompt file
+        Code->>Code: Append/Integrate file-output instruction
+        Code->>Code: Write modified prompt file
+        Code-->>User: Confirmation for file
+    end
+
+    User->>Review: Initiate Task 5 (Verify Prompts)
+    loop For each modified prompt file
+        Review->>Review: Review prompt changes
+    end
+    Review-->>User: Output: Verification status / Issues
+
+    User->>Git: Initiate Task 6 (Commit Changes)
+    Git->>Git: Stage modified prompts & journal files
+    Git->>Git: Commit changes to feature branch
+    Git-->>User: Output: Commit confirmation
+
+    User->>Orchestrator: Initiate Task 7 (Dev Logging)
+    Orchestrator->>Orchestrator: Execute pb_development_logging.md playbook
+    Orchestrator-->>User: Output: Path to devlog file
+
+    User->>User: Decide on Merge (Task 8)
+    alt Merge Approved
+        User->>Git: Request Merge
+        Git->>Git: Merge feature branch to main
+        Git-->>User: Output: Merge status
+    else Merge Declined
+        User->>Git: No action
+        Git-->>User: No merge performed
+    end
+```
