@@ -55,13 +55,12 @@ def _find_section(content: str, start_headings: List[str], start_offset: int = 0
     end_index = len(content)
     content_start_after_heading = best_match_start_index + len(found_heading)
 
-    # Look for the next heading of the same or lower level
-    for match in HEADING_PATTERN.finditer(content, content_start_after_heading):
-        next_level = len(match.group(1))
-        if next_level <= start_level:
-            end_index = match.start()
-            logger.debug(f"Found next heading '{match.group(2)}' at index {match.start()} with level {next_level}. Ending section.")
-            break # Found the boundary
+    # Look for the *first* heading after the found heading to mark the end
+    first_heading_after_start = HEADING_PATTERN.search(content, content_start_after_heading)
+    if first_heading_after_start:
+        end_index = first_heading_after_start.start()
+        logger.debug(f"Found next heading '{first_heading_after_start.group(2)}' at index {end_index}. Ending section.")
+    # Note: If no heading is found after the start, end_index remains len(content)
 
     section_content = content[best_match_start_index:end_index].strip()
     logger.debug(f"Section content extracted from index {best_match_start_index} to {end_index}.")

@@ -80,12 +80,12 @@ def test_load_configs_success(valid_json_file, sample_configs):
 
 def test_load_configs_invalid_structure(invalid_structure_json_file):
     """Test load_configs with JSON lacking the 'customModes' top-level key."""
-    with pytest.raises(TypeError, match="structure is invalid"):
+    with pytest.raises(ValueError, match="structure is invalid"):
         load_configs(invalid_structure_json_file)
 
 def test_load_configs_custommodes_not_list(non_list_custommodes_json_file):
     """Test load_configs when 'customModes' is not a list."""
-    with pytest.raises(TypeError, match="'customModes' .* is not a list"):
+    with pytest.raises(ValueError, match="'customModes' .* is not a list"):
         load_configs(non_list_custommodes_json_file)
 
 def test_load_configs_invalid_data(invalid_data_json_file):

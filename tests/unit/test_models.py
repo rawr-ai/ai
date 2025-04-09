@@ -34,12 +34,19 @@ def test_agent_config_missing_required_field():
     """Test validation error when a required field is missing."""
     with pytest.raises(ValidationError) as excinfo:
         AgentConfig(slug="missing-name", roleDefinition="Role without name")
-    assert "'name' field required" in str(excinfo.value)
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert errors[0]['type'] == 'missing'
+    assert errors[0]['loc'] == ('name',)
 
     with pytest.raises(ValidationError) as excinfo:
         AgentConfig(slug="missing-role", name="Agent without role")
     # Pydantic uses the alias in the error message if defined
-    assert "'roleDefinition' field required" in str(excinfo.value)
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert errors[0]['type'] == 'missing'
+    # Pydantic uses the field name 'roleDefinition' in loc, not the alias
+    assert errors[0]['loc'] == ('roleDefinition',)
 
 def test_agent_config_instantiation_with_alias():
     """Test instantiation using the alias 'roleDefinition'."""

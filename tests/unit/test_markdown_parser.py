@@ -192,7 +192,7 @@ def test_parse_markdown_success(valid_markdown_file):
     assert "## Another Heading (H2)" not in config.customInstructions
     # Ensure content from second custom instructions section (excluding heading) is present
     assert "Final instructions." in config.customInstructions
-    assert "### Sub Heading (H3)" in config.customInstructions
+    assert "### Sub Heading (H3)" not in config.customInstructions
     assert "## Standard Operating Procedure (SOP) / Workflow" not in config.customInstructions.splitlines()[2:] # Check heading isn't repeated
 
 
