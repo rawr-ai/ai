@@ -40,6 +40,12 @@ def main():
     # Update operation
     parser_update = subparsers.add_parser("update", help="Update an existing agent config from a Markdown file. Fails if slug does not exist.")
     parser_update.add_argument("path_to_markdown_file", type=str, help="Path to the agent definition Markdown file.")
+    parser_update.add_argument(
+        '--preserve-groups',
+        action='store_true',
+        default=False, # Explicitly default to False
+        help='Preserve the existing group assignments of the agent configuration being updated.'
+    )
 
     # Delete operation
     parser_delete = subparsers.add_parser("delete", help="Delete an agent config by its slug. Fails if slug does not exist.")
@@ -88,7 +94,7 @@ def main():
         if args.operation == "add":
             commands.add_config(args.path_to_markdown_file, target_json_path, markdown_base_dir)
         elif args.operation == "update":
-            commands.update_config(args.path_to_markdown_file, target_json_path, markdown_base_dir)
+            commands.update_config(args.path_to_markdown_file, target_json_path, markdown_base_dir, args.preserve_groups)
         elif args.operation == "delete":
             commands.delete_config(args.agent_slug, target_json_path)
         # elif args.operation == "sync":

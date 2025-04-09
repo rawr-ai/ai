@@ -49,7 +49,7 @@ def add_config(markdown_path_str: str, target_json_path: Path, markdown_base_dir
     logger.debug("Exiting add_config")
 
 
-def update_config(markdown_path_str: str, target_json_path: Path, markdown_base_dir: Path):
+def update_config(markdown_path_str: str, target_json_path: Path, markdown_base_dir: Path, preserve_groups: bool):
     """Updates an existing agent configuration from a Markdown file."""
     logger.debug(f"Entering update_config with markdown_path_str='{markdown_path_str}', target_json_path='{target_json_path}', markdown_base_dir='{markdown_base_dir}'")
     logger.info(f"Attempting to update configuration from: {markdown_path_str}")
@@ -72,9 +72,21 @@ def update_config(markdown_path_str: str, target_json_path: Path, markdown_base_
     found = False
     for i, config in enumerate(configs):
         if config.slug == updated_config.slug:
+            # --- Start: Added logic ---
+            if preserve_groups:
+                logger.debug(f"Preserving existing groups for slug '{config.slug}': {config.groups}")
+                # Ensure the existing config actually has groups before copying
+                if hasattr(config, 'groups') and config.groups is not None:
+                     updated_config.groups = config.groups
+                else:
+                     # Handle case where existing config might somehow lack groups (though model default should prevent this)
+                     logger.warning(f"Existing config for slug '{config.slug}' lacked groups attribute or was None. Cannot preserve.")
+            # --- End: Added logic ---
+
+            # Existing assignment (should be after the added logic)
             configs[i] = updated_config
             found = True
-            logger.debug(f"Found existing config for slug '{updated_config.slug}' at index {i}. Replacing.")
+            logger.debug(f"Found existing config for slug '{updated_config.slug}' at index {i}. Replacing.") # Existing log
             break
 
     if not found:
