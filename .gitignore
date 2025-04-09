@@ -1,5 +1,4 @@
 # General project ignores
-.DS_Store
 node_modules/
 build/
 dist/
@@ -10,23 +9,21 @@ temp/
 tmp/**/*
 *.swp
 *.swo
-.vscode/
 .idea/
 *.iml
 .env
 .venv/
 
-# OS generated files #
-######################
+# OS generated files
 .DS_Store
 .AppleDouble
 .LSOverride
 
-# Editors (remove all editor specific files) #
-##############################################
+# Editors
 *.sln
 
 # Visual Studio Code
+# Ignore everything in .vscode except specific config files
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -44,11 +41,11 @@ tmp/**/*
 # CLI config
 scripts/cli_config.yaml
 
-# Pytest
-/venv/
+# Python / Pytest
 *.pyc
 __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
 *.xml
+*.egg-info/
