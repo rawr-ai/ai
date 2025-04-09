@@ -5,7 +5,7 @@
 
 # New Agents
 - [ ] [NEW] Create a new `agent_project` agent that can manage long-term project files (e.g. todo lists, project plans, etc.)
-	- Possibly integrate with Linear via MCP.
+	- [ ] [FUTURE] Possibly integrate with Linear via MCP.
 
 # CLI
 - [ ] [CRITICAL] Add groups definition for each mode when adding/updating an agent. Otherwise breaks all existing agent configs.

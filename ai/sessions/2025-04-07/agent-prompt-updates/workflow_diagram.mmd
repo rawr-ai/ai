@@ -43,7 +43,7 @@ sequenceDiagram
     Git-->>User: Output: Commit confirmation
 
     User->>Orchestrator: Initiate Task 7 (Dev Logging)
-    Orchestrator->>Orchestrator: Execute pb_development_logging.md playbook
+    Orchestrator->>Orchestrator: Execute pb_session_journaling.md playbook
     Orchestrator-->>User: Output: Path to devlog file
 
     User->>User: Decide on Merge (Task 8)

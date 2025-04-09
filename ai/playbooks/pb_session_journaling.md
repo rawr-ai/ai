@@ -29,5 +29,5 @@ This playbook outlines the standard process for generating development logs, ens
     *   Include a descriptive commit message that clearly identifies the task being logged.
 
 ### Logging Conventions
-Log Storage Path: `./ai/journal/workflow-name/[YYYY-MM-DD]_[workflow-name].md`
+Log Storage Path: `./ai/journal/[YYYY-MM-DD]_[workflow-name].md`
 Filename Convention: `YYYY-MM-DD_workflow-name.md`

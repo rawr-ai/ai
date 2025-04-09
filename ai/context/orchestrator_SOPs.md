@@ -14,7 +14,7 @@ Once complete and verified, the feature branch MUST be merged back into the `mai
 
 Upon successful completion and merging of any significant development task, a development log entry MUST be created.
 
-The process outlined in `agents/orchestrate/playbooks/playbook_development_logging.md` MUST be followed to generate and commit this log entry to the `main` branch.
+The process outlined in `ai/playbooks/pb_session_journaling.md` MUST be followed to generate and commit this log entry to the `main` branch.
 
 ## Plan Review
 

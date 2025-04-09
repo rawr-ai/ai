@@ -1,7 +1,7 @@
 # DevLog Entry: Create Agent Configuration Management Script
 
 **Date:** 2025-04-06
-**Playbook:** `agents/orchestrate/playbooks/pb_development_logging.md` (Steps 2 & 3)
+**Playbook:** `ai/playbooks/pb_session_journaling.md` (Steps 2 & 3)
 
 ## Task Summary
 

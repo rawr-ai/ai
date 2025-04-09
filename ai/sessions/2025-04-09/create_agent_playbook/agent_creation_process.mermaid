@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant User as "User/Initiator"
+    participant Scout
+    participant HT as "Head Trainer"
+    participant PC as "Position Coach"
+    participant RM as "Roster Manager"
+    participant Script as "Agent Config Script"
+    participant ConfigFile as "Agent Config File (JSON)"
+
+    User->>Scout: Identify Need for New Agent
+    Scout->>Scout: Create Seed Prompt & Requirements
+    Scout->>HT: Submit Seed Prompt/Requirements
+    HT->>PC: Assign Agent Design Task
+    PC->>PC: Design Agent (Persona, Scope, Prompt)
+    PC->>PC: Create Agent Definition (Markdown File)
+    PC->>HT: Submit Agent Definition (Markdown)
+    HT->>RM: Assign Configuration Task (Markdown)
+    RM->>Script: Invoke Script (add/update <markdown_path>)
+    Script->>Script: Parse Markdown File
+    Script->>ConfigFile: Add/Update Agent Configuration
+    ConfigFile-->>Script: Confirmation
+    Script-->>RM: Report Success/Failure
+    RM-->>HT: Confirm Configuration Update

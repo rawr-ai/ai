@@ -11,10 +11,18 @@
 ### Defensive Coordinator
 
 -   (QA Loop) Review, Test, Debug, Report
--   (Security Audit) Security Review, Security Test, Security Debug, Security Report
+-   (Security Audit) Security Review, Security Test, Security Debug, Report
 
 ### Special Teams Coordinator
 
 -   (Publish Loop) Build, Deploy, Package, CI/CD
 -   (Feedback Loop) Ingest, Process, Analyze, Suggest
 -   (Documentation Loop) Review, Document, Publish, Distribute
+
+### Agent Management Playbooks
+
+-   `pb_create_new_agent.md`: Defines the standard process for designing, configuring, and registering new agents/custom modes.
+
+### Meta Playbooks
+
+-   `pb_create_playbook.md`: Describes the process for creating new playbooks, including analysis, drafting, review, and finalization.

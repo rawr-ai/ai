@@ -1,16 +1,24 @@
 ### Supports
 - [ ] Role
+  - [ ] `Raw` (optional, raw text instructions for the agent)
   - [ ] Core Identity & Purpose
   - [ ] Expertise
-  - [ ] Core Objective
-  - [ ] (OPTIONAL) Raw text
+  - [ ] Core Mandate
 - [ ] Behavior
-  - [ ] SOPs
+  - [ ] `Raw` (optional, raw text instructions for the agent)
+  - [ ] SOPs (standard operating procedures)
   - [ ] Authorizations
     - [ ] `authorized`
     - [ ] `unauthorized`
+  - [ ] Boundaries (what this agent should not focus on or pay attention to)
+    - [ ] `handoff` instructions on what to do if this agent can't handle a task, or if it can handle but the best way to do it is to hand it off to another agent
 - [ ] `tools` (granular, custom mcp tool permissions)
-  - [ ] `core` (native tool permissions === `groups` right now in roo)
-  - [ ] `custom`
+  - [ ] `native` (native tool permissions === `groups` right now in roo)
+  - [ ] `custom` (custom tool permissions; allows import, inherit/extend, or inline definition of tools)
 - [ ] `team` 
   - [ ] `partners` (peer-level agents with which this mode **collaborates**, not delegates)
+  - [ ] `subordinates` (agents to which this mode **delegates** work and **coordinates**, and which report to this mode)
+  - [ ] `superiors` (agents to which this mode **reports** -- superiors can override the default behavior of this mode)
+- [ ] `api` (optional, for custom API endpoints)
+  - [ ] `model` (required, model to use for the API call)
+  - [ ] `url` (required, URL of the API endpoint)

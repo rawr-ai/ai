@@ -17,7 +17,7 @@ The workflow involved the following steps:
 3.  **Modification:** A `code` agent iteratively read each identified prompt, appended the standard "Output Handling for Substantial Content" instruction block, and saved the complete modified content back to the file.
 4.  **Verification:** A `review` agent confirmed the instruction block was correctly added to all 8 prompts and that they remained coherent.
 5.  **Commit:** A `git` agent staged and committed the 8 modified prompt files and the 2 journal files (plan, diagram) to the feature branch.
-6.  **Logging Initiation:** Initiated the standard development logging playbook (`pb_development_logging.md`).
+6.  **Logging Initiation:** Initiated the standard development logging playbook (`pb_session_journaling.md`).
 
 ## Files Modified
 *   `agents/architect/agent_architect.md`

@@ -13,7 +13,7 @@ To create and integrate a new 'Position Coach' agent, specializing in the design
 *   **Verification:** Confirmed system recognition of the new agent.
 *   **Commits (Feature Branch):** Committed agent creation and configuration changes to the `feat/position-coach-agent` branch.
 *   **Merge:** Successfully merged `feat/position-coach-agent` into the `main` branch.
-*   **New Playbook Creation:** Conceptualized and created the 'Discovery Driven Execution' playbook in `agents/orchestrate/playbooks/playbook_discovery_driven_execution.md`.
+*   **New Playbook Creation:** Conceptualized and created the 'Discovery Driven Execution' playbook in `ai/playbooks/pb_discovery_driven_execution.md`.
 *   **Final Commits (Main Branch):** Committed the new playbook and any related documentation updates to the `main` branch.
 
 ## Significant Learnings/Deviations:
@@ -25,4 +25,4 @@ To create and integrate a new 'Position Coach' agent, specializing in the design
 *   `agents/design/position_coach_agent.md`
 *   `.roomodes`
 *   `roo_agent_mode_config.md`
-*   `agents/orchestrate/playbooks/playbook_discovery_driven_execution.md`
+*   `ai/playbooks/pb_discovery_driven_execution.md`

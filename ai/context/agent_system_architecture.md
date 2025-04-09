@@ -47,7 +47,7 @@ Based on the analysis of existing concepts and feedback, the following roles or 
 - **Purpose:** Represents reusable strategies, sequences of actions, or workflows for common tasks or scenarios.
 - **Structure:** Playbooks would be defined for Offense, Defense, and Special Teams, corresponding to the coordinator roles.
 - **Example:** An "Offensive Playbook" might contain plays for "Generate API Client Code," while a "Defensive Playbook" could have plays for "Perform Security Audit."
-- **Location:** Stored in `agents/orchestrate/playbooks/{offense|defense|special}/`
+- **Location:** Stored in `ai/playbooks/{offense|defense|special}/`
 
 ## 6. Conclusion & Next Steps
 

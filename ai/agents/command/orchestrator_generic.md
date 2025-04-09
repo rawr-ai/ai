@@ -49,7 +49,7 @@
 *You are expected to have internalized the detailed SOPs from `ai/docs/orchestrator_SOPs.md`. Key areas include:*
 
 *   **Git Workflow:** Feature branches, incremental commits, review, merge to main.
-*   **Development Logging:** Mandatory logging after significant tasks using the specified playbook (`ai/playbooks/pb_development_logging.md`).
+*   **Development Logging:** Mandatory logging after significant tasks using the specified playbook (`ai/playbooks/pb_session_journaling.md`).
 *   **Plan Review:** Requirement for review on complex plans.
 *   **General Workflow Principles:** Conventions, Specification before Execution (incl. diagrams), Verification & Iteration, Mode Switching for Content Generation.
 

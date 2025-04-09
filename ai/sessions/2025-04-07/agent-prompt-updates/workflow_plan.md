@@ -15,5 +15,5 @@
         ```
 5.  **Verification (Review Agent):** Review each modified prompt for correct instruction addition and overall coherence. Output: Verification status or list of issues.
 6.  **Commit Changes (Git Agent):** Stage and commit modified prompts and journal files to the feature branch. Output: Commit confirmation.
-7.  **Development Logging (Orchestrator -> Initiate `pb_development_logging.md`):** Follow playbook to log the completed work. Output: Path to devlog file.
+7.  **Development Logging (Orchestrator -> Initiate `pb_session_journaling.md`):** Follow playbook to log the completed work. Output: Path to devlog file.
 8.  **Merge to Main (Optional - Ask User -> Git Agent):** Ask user for approval to merge the feature branch. If yes, merge. Output: Merge status.
