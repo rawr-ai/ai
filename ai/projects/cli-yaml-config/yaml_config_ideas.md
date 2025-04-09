@@ -12,9 +12,21 @@
     - [ ] `unauthorized`
   - [ ] Boundaries (what this agent should not focus on or pay attention to)
     - [ ] `handoff` instructions on what to do if this agent can't handle a task, or if it can handle but the best way to do it is to hand it off to another agent
+- [ ] `type` (type of agent); one of:
+  - [ ] `generalist` (general-purpose agent)
+  - [ ] `utility` (general-purpose agent)
+  - [ ] `orchestrator` (orchestrates other agents)
+  - [ ] `specialist` (specializes in a specific task or domain)
+- [ ] `context` (references to files, directories, etc. that are relevant to the agent)
+  - [ ] `local` (local files, directories, etc. in the project)
+  - [ ] `hosted` (hosted files, directories, that can be found via MCP tools -- browser, filesystem, etc.)
 - [ ] `tools` (granular, custom mcp tool permissions)
   - [ ] `native` (native tool permissions === `groups` right now in roo)
   - [ ] `custom` (custom tool permissions; allows import, inherit/extend, or inline definition of tools)
+- [ ] `workflows` (optional, for custom workflow definitions)
+  - [ ] `gameplans` (highest level workflow; orchestrates other workflows by invoking orchestrator agents to complete large projects)
+  - [ ] `playbooks` (playbooks are collections of multi-agent workflows that can be invoked by orchestrator agents to complete larger objectives -- they CANNOT be invoked directly by other agents)
+  - [ ] `routes` (routes are single-agent workflows invoked directly by the agent itself; they are typically used for multi-step tasks that should **not** create subtasks but may invoke other agents via `switch_mode`). These are effectively codified SOPs.
 - [ ] `team` 
   - [ ] `partners` (peer-level agents with which this mode **collaborates**, not delegates)
   - [ ] `subordinates` (agents to which this mode **delegates** work and **coordinates**, and which report to this mode)

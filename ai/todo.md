@@ -7,6 +7,9 @@
 - [ ] [NEW] Create a new `agent_project` agent that can manage long-term project files (e.g. todo lists, project plans, etc.)
 	- [ ] [FUTURE] Possibly integrate with Linear via MCP.
 
+# Playbooks
+- [ ] [NEW] Define the XML schema for the playbooks. Or decide on a better format -- JSON? YAML? XML in MD?
+
 # CLI
 - [ ] [CRITICAL] Add groups definition for each mode when adding/updating an agent. Otherwise breaks all existing agent configs.
 - [ ] [UPGRADE] Switch to new directory-based config structure released by Roo in v3.11.1
