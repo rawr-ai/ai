@@ -1,0 +1,16 @@
+### Supports
+- [ ] Role
+  - [ ] Core Identity & Purpose
+  - [ ] Expertise
+  - [ ] Core Objective
+  - [ ] (OPTIONAL) Raw text
+- [ ] Behavior
+  - [ ] SOPs
+  - [ ] Authorizations
+    - [ ] `authorized`
+    - [ ] `unauthorized`
+- [ ] `tools` (granular, custom mcp tool permissions)
+  - [ ] `core` (native tool permissions === `groups` right now in roo)
+  - [ ] `custom`
+- [ ] `team` 
+  - [ ] `partners` (peer-level agents with which this mode **collaborates**, not delegates)

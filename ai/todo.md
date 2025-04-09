@@ -9,9 +9,14 @@
 
 # CLI
 - [ ] [CRITICAL] Add groups definition for each mode when adding/updating an agent. Otherwise breaks all existing agent configs.
+- [ ] [UPGRADE] Switch to new directory-based config structure released by Roo in v3.11.1
 - [ ] [FIX] Update `scripts/manage_agent_configs.py` to remove all magic strings and use the config file (e.g. for the config file path itself).
+- [ ] [FIX] Creating new agents via CLI silently fails if the markdown file does not exist. (I think, but this should be captured in a test.)
+- [ ] [FIX] Remove `manage_agent_configs.py` and just use the CLI.
+- [ ] [FIX] Use agent filename (or specified name property in YAML config) as the agent name when creating a new agent via CLI, not the directory name.
 - [ ] [CHANGE] Create structure YAML config files for agent prompts instead of flat MD files.
 - [ ] [NEW] Turn into MCP server so agents can manage agents programmatically.
+- [ ] [NEW] Enable "Hot Swap" for MCP config based on the current Mode. This enables mode-specific MCP configs that allow for granular control over agent capabilities.
 - [ ] [NEW] Allow option to choose between global vs. project-specific agent configs.
   - This will allow for more complex prompt configurations and easier management of agent settings.
   - Also enables real-time updates to agent prompts (i.e. dynamic updates based on the current state of the project).
