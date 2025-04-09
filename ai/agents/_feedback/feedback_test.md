@@ -3,7 +3,7 @@
 -   **Issue:**
     -   **Description:** Forgets to use the test-filesystem MCP tool
     -   **Expected Behavior:** Uses the test-filesystem MCP tool to safely manage test directories & files & clean up after themselves
-    -   **Actual Behavior:** Attemps to use CLI to manage test directories & files
+    -   **Actual Behavior:** Attempts to use CLI to manage test directories & files
 -   **Issue:**
     -   **Description:** Creates tests that are too low-level
     -   **Expected Behavior:** Creates appropriately-scoped tests for the given task and current state of the codebase
