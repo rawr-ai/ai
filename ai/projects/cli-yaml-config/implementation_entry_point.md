@@ -8,7 +8,7 @@
 
 ---
 
-This document provides guidance for the agent responsible for implementing the "Now" scope of the CLI refactoring project. All necessary planning, documentation, and supporting artifacts have been prepared and are located within this session directory: `ai/sessions/2025-04-10/refactor-cli-yaml-config/`.
+This document provides guidance for the agent responsible for implementing the "Now" scope of the CLI refactoring project. All necessary planning, documentation, and supporting artifacts have been prepared and are located within this session directory: `ai/projects/cli-yaml-config/`.
 
 **Recommended Starting Point:**
 

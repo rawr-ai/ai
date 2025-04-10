@@ -10,7 +10,7 @@ Refactor the internal `cli` tool to replace Markdown-based agent configuration p
 
 *   **`implementation_plan_scoped.md`**: The definitive, phased plan detailing tasks required *only* for the "Now" scope (global registry update).
 *   **`refactoring_map.md`**: Strategic overview outlining the "Now", "Next", and "Later" phases, confirming the immediate focus on the global path.
-*   **`config_findings.md`**: Summary of the current Roo Code configuration system based on documentation, providing context for registry locations and structure.
+*   **`roo_config_findings.md`**: Summary of the current Roo Code configuration system based on documentation, providing context for registry locations and structure.
 
 ## 3. Conflict Analysis & Document Status
 

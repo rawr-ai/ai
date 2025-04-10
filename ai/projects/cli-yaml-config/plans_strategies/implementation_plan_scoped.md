@@ -8,9 +8,9 @@
 Refactor the internal `cli` tool to replace Markdown-based agent configuration parsing with a structured `config.yaml` system **for the purpose of updating the global `custom_modes.json` registry**. The CLI will act as a compiler, reading `config.yaml` files, extracting necessary metadata, and updating the `custom_modes.json` file, decoupling global mode definition from runtime instruction assembly. Generation of project-level instruction files (e.g., `.roo/rules/...`) is **out of scope** for this phase.
 
 **References:** (Original references retained for context, but interpretation is filtered by the "Now" scope)
-*   Original Plan: `ai/sessions/2025-04-10/refactor-cli-yaml-config/implementation_plan.md`
-*   Analysis: `ai/sessions/2025-04-10/refactor-cli-yaml-config/implementation_plan_analysis.md` (Note: Analysis scope broader than "Now")
-*   Findings: `ai/sessions/2025-04-10/refactor-cli-yaml-config/config_findings.md`
+*   Original Plan: `ai/projects/cli-yaml-config/implementation_plan.md`
+*   Analysis: `ai/projects/cli-yaml-config/implementation_plan_analysis.md` (Note: Analysis scope broader than "Now")
+*   Findings: `ai/projects/cli-yaml-config/roo_config_findings.md`
 *   User Clarifications & Scope Constraint: (Provided in initiating prompt)
 
 ## 2. Pre-requisites & Assumptions
