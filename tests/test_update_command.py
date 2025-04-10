@@ -7,6 +7,7 @@ from typer.testing import CliRunner # Added import
 from cli.main import app # Added import
 from cli.agent_config.models import AgentConfig # Path already updated
 # Removed incorrect import: from .conftest import create_markdown_file
+from . import constants as test_constants # Import constants
 
 runner = CliRunner() # Instantiate runner
 
@@ -18,11 +19,11 @@ def test_successful_update(mocker, cli_config_yaml, caplog, create_markdown_file
     cli_config_path, agent_config_file, markdown_dir = cli_config_yaml
     # Mock high-level functions
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
+    mock_load_cli_config = mocker.patch(test_constants.MOCK_LOAD_CLI_CONFIG,
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock parse_markdown to return the updated agent details
     mock_updated_agent = AgentConfig(slug='test-agent', name='Test Agent', roleDefinition='Updated Test Role', instructions='Updated Instructions', capabilities=[])
-    mock_parse_markdown = mocker.patch("cli.agent_config.commands.parse_markdown", return_value=mock_updated_agent)
+    mock_parse_markdown = mocker.patch(test_constants.MOCK_PARSE_MARKDOWN, return_value=mock_updated_agent)
     # Mock load_configs to return the initial agent details
     initial_agent = AgentConfig(slug='test-agent', name='Test Agent', roleDefinition='Initial Role', instructions='Initial Instructions', capabilities=[])
     mock_load_configs = mocker.patch("cli.agent_config.commands.load_configs", return_value=[initial_agent])
@@ -59,11 +60,11 @@ def test_update_slug_missing(mocker, cli_config_yaml, create_markdown_file_facto
     cli_config_path, agent_config_file, markdown_dir = cli_config_yaml
     # Mock high-level functions
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
+    mock_load_cli_config = mocker.patch(test_constants.MOCK_LOAD_CLI_CONFIG,
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock parse_markdown
     mock_parsed_agent = AgentConfig(slug='non-existent-agent', name='Non Existent Agent', roleDefinition='Test Role', instructions='Non Existent Instructions', capabilities=[])
-    mock_parse_markdown = mocker.patch("cli.agent_config.commands.parse_markdown", return_value=mock_parsed_agent)
+    mock_parse_markdown = mocker.patch(test_constants.MOCK_PARSE_MARKDOWN, return_value=mock_parsed_agent)
     # Mock load_configs to return an empty list
     mock_load_configs = mocker.patch("cli.agent_config.commands.load_configs", return_value=[])
     mock_save_configs = mocker.patch("cli.agent_config.commands.save_configs")
@@ -87,10 +88,10 @@ def test_update_invalid_markdown_file_non_existent(mocker, cli_config_yaml): # R
 
     # Mock high-level functions
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch(test_constants.MOCK_SETTINGS_LOAD_CLI_CONFIG,
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock parse_markdown to raise FileNotFoundError
-    mock_parse_markdown = mocker.patch("cli.agent_config.commands.parse_markdown",
+    mock_parse_markdown = mocker.patch(test_constants.MOCK_PARSE_MARKDOWN,
                                         side_effect=FileNotFoundError(f"Simulated Error: Markdown file not found at path: {non_existent_md_path}"))
     mock_load_configs = mocker.patch("cli.agent_config.commands.load_configs", return_value=[])
     mock_save_configs = mocker.patch("cli.agent_config.commands.save_configs")
@@ -112,10 +113,10 @@ def test_update_invalid_markdown_content_malformed(mocker, cli_config_yaml, crea
     cli_config_path, agent_config_file, markdown_dir = cli_config_yaml
     # Mock high-level functions
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch(test_constants.MOCK_SETTINGS_LOAD_CLI_CONFIG,
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Simulate parse_markdown raising an error
-    mock_parse_markdown = mocker.patch("cli.agent_config.commands.parse_markdown",
+    mock_parse_markdown = mocker.patch(test_constants.MOCK_PARSE_MARKDOWN,
                                         side_effect=ValueError("Simulated Error: Could not find role definition heading"))
     # Load should still happen before parse
     existing_agent = AgentConfig(slug='malformed-agent', name='Malformed Agent', roleDefinition='Existing Role', instructions='Existing Instructions', capabilities=[])

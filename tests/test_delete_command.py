@@ -6,6 +6,7 @@ from pathlib import Path
 from typer.testing import CliRunner # Added import
 from cli.main import app # Added import
 from cli.agent_config.models import AgentConfig # Path already updated
+from . import constants as test_constants # Import constants
 
 runner = CliRunner() # Instantiate runner
 # Note: cli_config_yaml fixture is automatically available from conftest.py
@@ -17,7 +18,7 @@ def test_successful_delete(mocker, cli_config_yaml, caplog): # Removed tmp_path
     # Mock high-level functions
     # Simulate successful CLI config load
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
+    mock_load_cli_config = mocker.patch(test_constants.MOCK_LOAD_CLI_CONFIG,
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock load_configs to return the agent to be deleted
     existing_agent = AgentConfig(slug='test-agent', name='Test Agent', roleDefinition='Test Role', instructions='Test Instructions', capabilities=[])
@@ -49,7 +50,7 @@ def test_delete_slug_missing(mocker, cli_config_yaml): # Removed tmp_path, capsy
     cli_config_path, agent_config_file, markdown_dir = cli_config_yaml
     # Mock high-level functions
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch(test_constants.MOCK_SETTINGS_LOAD_CLI_CONFIG,
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock load_configs to return an empty list
     mock_load_configs = mocker.patch("cli.agent_config.commands.load_configs", return_value=[])

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roo"
+version = "0.1.0"
+description = "Roo CLI"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "typer[all]",
+    "pydantic",
+    "PyYAML",
+]
+
+
+[project.scripts]
+rawr = "cli.main:app"
+
+[tool.setuptools.packages.find]
+    where = ["."]
+    include = ["cli*"]
+    exclude = ["tests*"]
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-mock",
+    "flake8",
+    "black",
+    "mypy",
+    "types-PyYAML",
+]
+
+# Removed these lines as they were moved above
