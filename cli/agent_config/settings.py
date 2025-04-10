@@ -2,8 +2,9 @@
 import json
 import logging
 from pathlib import Path
+import os # Added import
 from typing import List, Dict, Any
-import yaml # Added import
+import yaml
 
 from pydantic import ValidationError
 from .models import AgentConfig
@@ -11,32 +12,45 @@ from .models import AgentConfig
 # Get a logger for this module
 logger = logging.getLogger(__name__)
 
-# Define the path to the CLI configuration file relative to the project root
-CLI_CONFIG_PATH = Path("cli/config.yaml").resolve()
+# Define the default path to the CLI configuration file relative to the project root
+DEFAULT_CLI_CONFIG_PATH = Path("cli/config.yaml").resolve()
+# Allow overriding via environment variable for testing
+CLI_CONFIG_ENV_VAR = "AGENT_CLI_CONFIG_PATH"
 
 def load_cli_config() -> Dict[str, Any]:
-    """Loads the CLI's operational configuration from cli/config.yaml."""
-    logger.debug(f"Entering load_cli_config, attempting to load from: {CLI_CONFIG_PATH}")
-    if not CLI_CONFIG_PATH.is_file():
-        logger.error(f"CLI configuration file not found at {CLI_CONFIG_PATH}.")
-        raise FileNotFoundError(f"CLI configuration file not found: {CLI_CONFIG_PATH}")
+    """
+    Loads the CLI's operational configuration.
+    Uses AGENT_CLI_CONFIG_PATH environment variable if set, otherwise defaults to cli/config.yaml.
+    """
+    config_path_str = os.environ.get(CLI_CONFIG_ENV_VAR)
+    if config_path_str:
+        config_path = Path(config_path_str).resolve()
+        logger.info(f"Using CLI config path from environment variable {CLI_CONFIG_ENV_VAR}: {config_path}")
+    else:
+        config_path = DEFAULT_CLI_CONFIG_PATH
+        logger.info(f"Using default CLI config path: {config_path}")
+
+    logger.debug(f"Entering load_cli_config, attempting to load from: {config_path}")
+    if not config_path.is_file():
+        logger.error(f"CLI configuration file not found at {config_path}.")
+        raise FileNotFoundError(f"CLI configuration file not found: {config_path}")
     try:
-        logger.info(f"Loading CLI configuration from: {CLI_CONFIG_PATH}")
-        with open(CLI_CONFIG_PATH, 'r', encoding='utf-8') as f:
+        logger.info(f"Loading CLI configuration from: {config_path}")
+        with open(config_path, 'r', encoding='utf-8') as f:
             config_data = yaml.safe_load(f)
         if not isinstance(config_data, dict):
-            logger.error(f"Invalid format: CLI config file {CLI_CONFIG_PATH} did not parse as a dictionary.")
-            raise TypeError(f"CLI configuration ({CLI_CONFIG_PATH}) is not a valid dictionary.")
+            logger.error(f"Invalid format: CLI config file {config_path} did not parse as a dictionary.")
+            raise TypeError(f"CLI configuration ({config_path}) is not a valid dictionary.")
         logger.info("Successfully loaded CLI configuration.")
         logger.debug(f"CLI Config content: {config_data}")
         logger.debug("Exiting load_cli_config (success)")
         return config_data
     except yaml.YAMLError as e:
-        logger.error(f"YAML parsing error in {CLI_CONFIG_PATH}: {e}")
-        raise ValueError(f"Invalid YAML format in {CLI_CONFIG_PATH}: {e}")
+        logger.error(f"YAML parsing error in {config_path}: {e}")
+        raise ValueError(f"Invalid YAML format in {config_path}: {e}")
     except Exception as e:
-        logger.error(f"Unexpected error loading CLI config from {CLI_CONFIG_PATH}: {e}", exc_info=True)
-        raise RuntimeError(f"Failed to load CLI configuration from {CLI_CONFIG_PATH}: {e}")
+        logger.error(f"Unexpected error loading CLI config from {config_path}: {e}", exc_info=True)
+        raise RuntimeError(f"Failed to load CLI configuration from {config_path}: {e}")
 
 
 def load_configs(json_path: Path) -> List[AgentConfig]:

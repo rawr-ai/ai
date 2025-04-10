@@ -2,8 +2,8 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock, call
 
-from scripts.agent_config_manager import commands
-from scripts.agent_config_manager.models import AgentConfig
+from cli.agent_config import commands # Updated path
+from cli.agent_config.models import AgentConfig # Updated path
 
 # --- Fixtures ---
 
