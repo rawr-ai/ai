@@ -1,0 +1,86 @@
+# DRAFT CONFIGURATION FOR AI AGENT
+
+role:
+  # Optional raw text instructions for the agent
+  raw: ""
+  
+  # Core identity and purpose of the agent
+  core_identity_and_purpose: ""
+  
+  # Areas of expertise
+  expertise: ""
+  
+  # Primary responsibilities or objectives
+  core_mandate: ""
+
+behavior:
+  # Optional raw text instructions that govern agent behavior
+  raw: ""
+  
+  # Standard Operating Procedures (step-by-step instructions/guidelines)
+  sops: []
+  
+  authorizations:
+    # Actions or tasks the agent is explicitly allowed to perform
+    authorized: []
+    
+    # Actions or tasks the agent is not allowed to perform
+    unauthorized: []
+  
+  boundaries:
+    # Areas or topics the agent should ignore or avoid
+    restricted_topics: []
+    
+    # Instructions for handing off work the agent cannot or should not handle
+    handoff: ""
+
+# Type of agent. One of: generalist, utility, orchestrator, specialist
+type: "generalist"
+
+context:
+  # References to local files, directories, or resources
+  local: []
+  
+  # References to remote files, directories, or resources accessible via tools
+  remote: []
+  
+  # Memory store or knowledge base references
+  memory: []
+  
+  # Graph database or semantic network references
+  graph: []
+
+tools:
+  # Built-in (native) tool permissions or groups
+  native: []
+  
+  # Custom tool permissions (import, define, or extend capabilities)
+  custom: []
+
+workflows:
+  # High-level orchestration workflows (often involving multiple agents)
+  gameplans: []
+  
+  # Collections of multi-agent workflows; invoked by orchestrators
+  playbooks: []
+  
+  # Single-agent workflows or routes that can be invoked directly by this agent
+  routes: []
+
+team:
+  # Peer-level agents for collaboration
+  partners: []
+  
+  # Agents to which this agent delegates or supervises
+  subordinates: []
+  
+  # Agents that supervise or override this agent’s decisions
+  superiors: []
+
+# Optional API configuration if this agent is accessed via a custom endpoint
+api:
+  # Model to use for API calls (e.g., GPT-4, GPT-3.5, etc.)
+  model: ""
+  
+  # URL endpoint where requests are sent
+  url: ""
