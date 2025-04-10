@@ -2,8 +2,8 @@ import json
 import pytest
 from pathlib import Path
 from pydantic import ValidationError
-from scripts.agent_config_manager.config import load_configs, save_configs
-from scripts.agent_config_manager.models import AgentConfig
+from cli.agent_config.settings import load_configs, save_configs # Updated path
+from cli.agent_config.models import AgentConfig # Updated path
 
 # --- Fixtures ---
 

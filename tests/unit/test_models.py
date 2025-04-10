@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from scripts.agent_config_manager.models import AgentConfig
+from cli.agent_config.models import AgentConfig
 
 def test_agent_config_minimal_instantiation():
     """Test basic instantiation with required fields."""

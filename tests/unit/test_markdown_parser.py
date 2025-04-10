@@ -1,12 +1,12 @@
 import pytest
 from pathlib import Path
-from scripts.agent_config_manager.markdown_parser import (
+from cli.agent_config.markdown_utils import ( # Updated path
     parse_markdown,
     _find_section,
     ROLE_DEFINITION_HEADINGS,
     CUSTOM_INSTRUCTIONS_HEADINGS,
 )
-from scripts.agent_config_manager.models import AgentConfig
+from cli.agent_config.models import AgentConfig # Updated path
 
 # --- Fixtures ---
 
