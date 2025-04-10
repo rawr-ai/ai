@@ -19,6 +19,10 @@
 -   (Feedback Loop) Ingest, Process, Analyze, Suggest
 -   (Documentation Loop) Review, Document, Publish, Distribute
 
+### Code Maintenance Playbooks
+
+-   `pb_refactor_codebase.md`: To systematically refactor a specified section of a codebase to improve its quality (e.g., readability, maintainability, performance, security) while ensuring existing functionality is preserved, following a structured, multi-agent workflow integrated with Git best practices.
+
 ### Agent Management Playbooks
 
 -   `pb_create_new_agent.md`: Defines the standard process for designing, configuring, and registering new agents/custom modes.
