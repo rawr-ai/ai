@@ -1,4 +1,4 @@
-# AI Agent Definition: Playbook Coordinator (Specialized Orchestrator)
+# Playbook Coordinator 📓
 
 ## Core Identity & Purpose
 
