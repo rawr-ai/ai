@@ -3,3 +3,7 @@ pytest-asyncio
 pytest-mock
 PyYAML
 pydantic
+flake8
+black
+mypy
+types-PyYAML

@@ -12,7 +12,7 @@ runner = CliRunner() # Instantiate runner
 def test_add_missing_arguments(mocker, cli_config_yaml): # Removed capsys
     """Tests that 'add' command exits with error if markdown path is missing."""
     # Mock config loading as it happens before argument parsing fails
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
                                          return_value={'target_json_path': 'dummy.json', 'markdown_base_dir': 'dummy_dir'})
 
     # Invoke CLI runner with missing argument
@@ -29,7 +29,7 @@ def test_add_invalid_arguments(mocker, cli_config_yaml): # Removed tmp_path, cap
     invalid_md_path = markdown_dir / "invalid slug.md" # Keep path for argument
 
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock parse_markdown to raise ValueError
     mock_parse_markdown = mocker.patch("cli.agent_config.commands.parse_markdown",
@@ -48,7 +48,7 @@ def test_add_invalid_arguments(mocker, cli_config_yaml): # Removed tmp_path, cap
 def test_update_missing_arguments(mocker, cli_config_yaml): # Removed capsys
     """Tests that 'update' command exits with error if markdown path is missing."""
     # Mock config loading
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
                                          return_value={'target_json_path': 'dummy.json', 'markdown_base_dir': 'dummy_dir'})
 
     # Invoke CLI runner with missing argument
@@ -65,7 +65,7 @@ def test_update_invalid_arguments(mocker, cli_config_yaml): # Removed tmp_path, 
     invalid_md_path = markdown_dir / "invalid slug.md" # Keep path for argument
 
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock parse_markdown to raise ValueError
     mock_parse_markdown = mocker.patch("cli.agent_config.commands.parse_markdown",
@@ -84,7 +84,7 @@ def test_update_invalid_arguments(mocker, cli_config_yaml): # Removed tmp_path, 
 def test_delete_missing_arguments(mocker, cli_config_yaml): # Removed capsys
     """Tests that 'delete' command exits with error if agent slug is missing."""
     # Mock config loading
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
                                          return_value={'target_json_path': 'dummy.json', 'markdown_base_dir': 'dummy_dir'})
 
     # Invoke CLI runner with missing argument

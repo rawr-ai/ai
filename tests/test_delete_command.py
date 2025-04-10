@@ -17,7 +17,7 @@ def test_successful_delete(mocker, cli_config_yaml, caplog): # Removed tmp_path
     # Mock high-level functions
     # Simulate successful CLI config load
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock load_configs to return the agent to be deleted
     existing_agent = AgentConfig(slug='test-agent', name='Test Agent', roleDefinition='Test Role', instructions='Test Instructions', capabilities=[])

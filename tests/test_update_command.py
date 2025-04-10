@@ -18,7 +18,7 @@ def test_successful_update(mocker, cli_config_yaml, caplog, create_markdown_file
     cli_config_path, agent_config_file, markdown_dir = cli_config_yaml
     # Mock high-level functions
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock parse_markdown to return the updated agent details
     mock_updated_agent = AgentConfig(slug='test-agent', name='Test Agent', roleDefinition='Updated Test Role', instructions='Updated Instructions', capabilities=[])
@@ -59,7 +59,7 @@ def test_update_slug_missing(mocker, cli_config_yaml, create_markdown_file_facto
     cli_config_path, agent_config_file, markdown_dir = cli_config_yaml
     # Mock high-level functions
     # Mock functions
-    mock_load_cli_config = mocker.patch("cli.agent_config.settings.load_cli_config",
+    mock_load_cli_config = mocker.patch("cli.main.load_cli_config",
                                          return_value={'target_json_path': str(agent_config_file), 'markdown_base_dir': str(markdown_dir)})
     # Mock parse_markdown
     mock_parsed_agent = AgentConfig(slug='non-existent-agent', name='Non Existent Agent', roleDefinition='Test Role', instructions='Non Existent Instructions', capabilities=[])
@@ -103,7 +103,8 @@ def test_update_invalid_markdown_file_non_existent(mocker, cli_config_yaml): # R
     # Assertions
     assert result.exit_code == 1 # Failure exit code
     # Check stdout for the error message
-    assert "Error updating agent: Simulated Error: Markdown file not found" in result.stdout
+    # Check for the generic "An unexpected error occurred" message from main.py
+    assert "An unexpected error occurred: Simulated Error: Markdown file not found" in result.stdout
     mock_save_configs.assert_not_called()
 
 def test_update_invalid_markdown_content_malformed(mocker, cli_config_yaml, create_markdown_file_factory): # Removed tmp_path, capsys

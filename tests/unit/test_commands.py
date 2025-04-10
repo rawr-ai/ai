@@ -64,9 +64,9 @@ def mock_new_config():
 @pytest.fixture(autouse=True)
 def mock_dependencies():
     """Auto-applied fixture to mock dependencies for all tests in this module."""
-    with patch('scripts.agent_config_manager.commands.load_configs') as mock_load, \
-         patch('scripts.agent_config_manager.commands.save_configs') as mock_save, \
-         patch('scripts.agent_config_manager.commands.parse_markdown') as mock_parse:
+    with patch('cli.agent_config.commands.load_configs') as mock_load, \
+         patch('cli.agent_config.commands.save_configs') as mock_save, \
+         patch('cli.agent_config.commands.parse_markdown') as mock_parse:
         # Yield the mocks so tests can access them if needed, though often just
         # checking calls on them is sufficient.
         yield mock_load, mock_save, mock_parse
@@ -125,7 +125,7 @@ def test_update_config_success(
     updated_config_a = AgentConfig(slug="agent-a", name="Agent A Updated", roleDefinition="Role A Updated")
     mock_parse.return_value = updated_config_a
 
-    commands.update_config(mock_markdown_path_a, mock_target_json_path, mock_markdown_base_dir)
+    commands.update_config(mock_markdown_path_a, mock_target_json_path, mock_markdown_base_dir, preserve_groups=True)
 
     mock_parse.assert_called_once_with(Path(mock_markdown_path_a).resolve())
     mock_load.assert_called_once_with(mock_target_json_path)
@@ -150,7 +150,7 @@ def test_update_config_slug_not_found(
     mock_parse.return_value = mock_new_config # Config with slug 'new-agent'
 
     with pytest.raises(ValueError, match=f"Agent with slug '{mock_new_config.slug}' not found"):
-        commands.update_config(mock_markdown_path_new, mock_target_json_path, mock_markdown_base_dir)
+        commands.update_config(mock_markdown_path_new, mock_target_json_path, mock_markdown_base_dir, preserve_groups=True)
 
     mock_parse.assert_called_once()
     mock_load.assert_called_once()
