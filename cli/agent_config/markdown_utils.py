@@ -1,21 +1,28 @@
-# scripts/agent_config_manager/markdown_parser.py
+# cli/agent_config/markdown_utils.py
 import logging
 import re
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 from pydantic import ValidationError
+
+from cli import constants  # Corrected import path
 from .models import AgentConfig
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
 
 # --- Constants ---
-ROLE_DEFINITION_HEADINGS = ["# Core Identity & Purpose", "# Persona", "# Role"]
+ROLE_DEFINITION_HEADINGS = [
+    constants.MD_HEADING_CORE_ID,
+    constants.MD_HEADING_PERSONA,
+    constants.MD_HEADING_ROLE,
+]
+# List of headings that signify the start of a custom instructions section
 CUSTOM_INSTRUCTIONS_HEADINGS = [
-    "## Custom Instructions",
-    "## Mode-specific Instructions",
-    "## Standard Operating Procedure (SOP) / Workflow",
+    constants.MD_HEADING_CUSTOM_INSTRUCTIONS,
+    constants.MD_HEADING_MODE_INSTRUCTIONS,
+    constants.MD_HEADING_SOP,
 ]
 HEADING_PATTERN = re.compile(r"^\s*(#+)\s+(.*)", re.MULTILINE)
 
@@ -127,10 +134,12 @@ def parse_markdown(markdown_path: Path) -> AgentConfig:
     logger.debug(f"Extracted name: '{name}'")
 
     # Extract roleDefinition (first match of specified headings)
-    role_section_result = _find_section(content, ROLE_DEFINITION_HEADINGS)
+    role_section_result = _find_section(
+        content, ROLE_DEFINITION_HEADINGS
+    )  # Uses updated constant list
     if not role_section_result:
         raise ValueError(
-            f"Could not find any role definition heading ({', '.join(ROLE_DEFINITION_HEADINGS)}) in: {markdown_path}"
+            f"Could not find any role definition heading ({', '.join(constants.ROLE_DEFINITION_HEADINGS)}) in: {markdown_path}"
         )
     role_definition, _, _ = role_section_result
     logger.debug(
@@ -184,12 +193,12 @@ def parse_markdown(markdown_path: Path) -> AgentConfig:
 
     try:
         config_data = {
-            "slug": slug,
-            "name": name,
-            "roleDefinition": role_definition,
+            constants.SLUG: slug,
+            constants.NAME: name,
+            constants.ROLE_DEFINITION: role_definition,
         }
         if custom_instructions_final:
-            config_data["customInstructions"] = custom_instructions_final
+            config_data[constants.CUSTOM_INSTRUCTIONS] = custom_instructions_final
 
         logger.debug(
             f"Attempting to validate and create AgentConfig for slug '{slug}'."

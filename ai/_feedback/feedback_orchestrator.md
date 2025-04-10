@@ -41,3 +41,7 @@
 4. When initiating a conditional loop:
     -   Ensure the orchestrator has a plan for how to handle the loop (e.g. a dedicated coordinator for handling loops or directing agents to switch modes). For example, a review loop could include a coordinator that manages the Review, any necessary modifications (Code/Implement/Fix), and the summary of changes/updates/etc. that would be passed back up to the orchestrator. A dedicated coordinator may not be necessary if the loop is simple, but if the loop is complex, it's best to have a dedicated coordinator manage the loop.
     -   If the loop start condition is not met (e.g. Review agent recommends no changes), the orchestrator should proceed to the next step in the workflow.
+
+
+# SHOULD NOT
+- Tell specialist agents how to do their job. Instead, provide them with the necessary context, very clear objectives, and let them figure it out.

@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 from typing_extensions import Annotated
 
+from . import constants  # Added import
+
 # Temporarily import from current structure - will be updated in Step 6
 try:
     from cli.agent_config.commands import (
@@ -54,10 +56,10 @@ def get_config_paths():
     try:
         config = load_cli_config()
         target_json = Path(
-            config.get("target_json_path", "configs/agents.json")
+            config.get(constants.TARGET_JSON_PATH, constants.DEFAULT_TARGET_JSON)
         ).resolve()
         markdown_dir = Path(
-            config.get("markdown_base_dir", "docs/agents/")
+            config.get(constants.MARKDOWN_BASE_DIR, constants.DEFAULT_MARKDOWN_DIR)
         ).resolve()
         logger.debug(
             f"Loaded config: target_json='{target_json}', markdown_dir='{markdown_dir}'"
@@ -78,7 +80,7 @@ def get_config_paths():
 # --- CLI Commands ---
 
 
-@app.command("add")
+@app.command(constants.CMD_ADD)
 def add_agent_config(
     markdown_path: Annotated[
         str,
@@ -110,7 +112,7 @@ def add_agent_config(
         raise typer.Exit(code=1)
 
 
-@app.command("update")
+@app.command(constants.CMD_UPDATE)
 def update_agent_config(
     markdown_path: Annotated[
         str,
@@ -155,7 +157,7 @@ def update_agent_config(
         raise typer.Exit(code=1)
 
 
-@app.command("delete")
+@app.command(constants.CMD_DELETE)
 def delete_agent_config(
     slug: Annotated[
         str,

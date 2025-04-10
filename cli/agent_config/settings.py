@@ -7,15 +7,17 @@ from typing import List, Dict, Any
 import yaml
 
 from pydantic import ValidationError
+
+from cli import constants  # Corrected import path
 from .models import AgentConfig
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
 
 # Define the default path to the CLI configuration file relative to the project root
-DEFAULT_CLI_CONFIG_PATH = Path("cli/config.yaml").resolve()
+DEFAULT_CLI_CONFIG_PATH = Path(constants.DEFAULT_CONFIG_PATH).resolve()
 # Allow overriding via environment variable for testing
-CLI_CONFIG_ENV_VAR = "AGENT_CLI_CONFIG_PATH"
+CLI_CONFIG_ENV_VAR = constants.ENV_CONFIG_PATH
 
 
 def load_cli_config() -> Dict[str, Any]:
@@ -86,22 +88,22 @@ def load_configs(json_path: Path) -> List[AgentConfig]:
         # Removed unnecessary f-string
         logger.debug("Successfully loaded raw JSON data.")
         # Expect a dictionary with a 'customModes' key containing the list
-        if not isinstance(data, dict) or "customModes" not in data:
+        if not isinstance(data, dict) or constants.CUSTOM_MODES not in data:
             logger.error(
-                f"Invalid format: Target JSON file {json_path} does not contain a top-level 'customModes' key."
+                f"Invalid format: Target JSON file {json_path} does not contain a top-level '{constants.CUSTOM_MODES}' key."
             )
             raise TypeError(
-                f"Target JSON ({json_path}) structure is invalid. Expected {{'customModes': [...]}}."
+                f"Target JSON ({json_path}) structure is invalid. Expected {{'{constants.CUSTOM_MODES}': [...]}}."
             )
-        if not isinstance(data["customModes"], list):
+        if not isinstance(data[constants.CUSTOM_MODES], list):
             logger.error(
-                f"Invalid format: 'customModes' key in {json_path} does not contain a list."
+                f"Invalid format: '{constants.CUSTOM_MODES}' key in {json_path} does not contain a list."
             )
-            raise TypeError(f"'customModes' in {json_path} is not a list.")
+            raise TypeError(f"'{constants.CUSTOM_MODES}' in {json_path} is not a list.")
         logger.debug(
-            f"Attempting to parse {len(data['customModes'])} items into AgentConfig models."
+            f"Attempting to parse {len(data[constants.CUSTOM_MODES])} items into AgentConfig models."
         )
-        configs = [AgentConfig.parse_obj(item) for item in data["customModes"]]
+        configs = [AgentConfig.parse_obj(item) for item in data[constants.CUSTOM_MODES]]
         logger.info(
             f"Successfully loaded and validated {len(configs)} configurations."
         )
@@ -139,16 +141,16 @@ def save_configs(json_path: Path, configs: List[AgentConfig]):
                 config.dict(by_alias=True, exclude_none=True)
                 for config in configs
             ],
-            key=lambda x: x.get("slug", ""),
+            key=lambda x: x.get(constants.SLUG, ""),
         )
         logger.debug(f"Prepared {len(config_dicts)} dictionaries for saving.")
         logger.debug(f"Opening file for writing: {json_path}")
         with open(json_path, "w", encoding="utf-8") as f:
             # Wrap the list in the expected top-level structure
             logger.debug(
-                "Wrapping config list in {'customModes': ...} structure."
+                f"Wrapping config list in {{'{constants.CUSTOM_MODES}': ...}} structure."
             )
-            output_data = {"customModes": config_dicts}
+            output_data = {constants.CUSTOM_MODES: config_dicts}
             json.dump(output_data, f, indent=2, ensure_ascii=False)
         logger.info(f"Successfully saved configurations to {json_path}")
         logger.debug("Exiting save_configs (success)")
