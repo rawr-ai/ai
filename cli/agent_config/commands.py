@@ -2,8 +2,8 @@
 import logging
 from pathlib import Path
 
-from .config import load_configs, save_configs
-from .markdown_parser import parse_markdown
+from .settings import load_configs, save_configs
+from .markdown_utils import parse_markdown
 from .models import AgentConfig
 
 # Get a logger for this module

@@ -1,14 +1,43 @@
-# scripts/agent_config_manager/config.py
+# cli/agent_config/settings.py
 import json
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any
+import yaml # Added import
 
 from pydantic import ValidationError
 from .models import AgentConfig
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
+
+# Define the path to the CLI configuration file relative to the project root
+CLI_CONFIG_PATH = Path("cli/config.yaml").resolve()
+
+def load_cli_config() -> Dict[str, Any]:
+    """Loads the CLI's operational configuration from cli/config.yaml."""
+    logger.debug(f"Entering load_cli_config, attempting to load from: {CLI_CONFIG_PATH}")
+    if not CLI_CONFIG_PATH.is_file():
+        logger.error(f"CLI configuration file not found at {CLI_CONFIG_PATH}.")
+        raise FileNotFoundError(f"CLI configuration file not found: {CLI_CONFIG_PATH}")
+    try:
+        logger.info(f"Loading CLI configuration from: {CLI_CONFIG_PATH}")
+        with open(CLI_CONFIG_PATH, 'r', encoding='utf-8') as f:
+            config_data = yaml.safe_load(f)
+        if not isinstance(config_data, dict):
+            logger.error(f"Invalid format: CLI config file {CLI_CONFIG_PATH} did not parse as a dictionary.")
+            raise TypeError(f"CLI configuration ({CLI_CONFIG_PATH}) is not a valid dictionary.")
+        logger.info("Successfully loaded CLI configuration.")
+        logger.debug(f"CLI Config content: {config_data}")
+        logger.debug("Exiting load_cli_config (success)")
+        return config_data
+    except yaml.YAMLError as e:
+        logger.error(f"YAML parsing error in {CLI_CONFIG_PATH}: {e}")
+        raise ValueError(f"Invalid YAML format in {CLI_CONFIG_PATH}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error loading CLI config from {CLI_CONFIG_PATH}: {e}", exc_info=True)
+        raise RuntimeError(f"Failed to load CLI configuration from {CLI_CONFIG_PATH}: {e}")
+
 
 def load_configs(json_path: Path) -> List[AgentConfig]:
     """Loads agent configurations from the JSON file."""

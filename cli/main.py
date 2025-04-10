@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 # Temporarily import from current structure - will be updated in Step 6
 try:
     from cli.agent_config.commands import add_config, update_config, delete_config
-    from cli.agent_config.config import load_cli_config # Assuming config loading logic is here for now
+    from cli.agent_config.settings import load_cli_config # Updated import from settings.py
 except ImportError as e:
     print(f"Initial import failed (expected during refactor): {e}")
     # Provide dummy functions or raise error if needed for basic structure validation
