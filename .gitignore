@@ -54,3 +54,4 @@ htmlcov/
 # Local config overrides
 *.local.yaml
 .rawr_registry/
+rawr.config.yaml
