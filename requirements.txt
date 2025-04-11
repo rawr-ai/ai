@@ -1,3 +1,0 @@
-typer[all]
-pydantic
-PyYAML
