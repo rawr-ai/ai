@@ -1,7 +1,7 @@
 import pytest
 import yaml
 from pydantic import ValidationError
-from unittest.mock import mock_open, MagicMock
+from unittest.mock import mock_open, MagicMock # Keep mock_open for direct use if needed, though helper is preferred
 import os
 from pathlib import Path
 
@@ -12,6 +12,7 @@ from cli.models import GlobalAgentConfig, ApiConfig, GroupRestriction
 # from cli.config_loader import load_and_validate_config, ConfigLoadError, ConfigValidationError
 # TODO: Rewrite these tests to target the new cli.config_loader.load_config function
 # which handles loading global paths, not individual agent configs.
+from tests.helpers import mocking_utils # Use absolute import from project root
 
 # --- Test Data ---
 
@@ -121,9 +122,11 @@ groups:
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_minimal_valid_config(mocker):
-    """LOADER_UT_001: Verify successful loading of minimal valid config."""
     mocker.patch("pathlib.Path.is_file", return_value=True) # Mock file existence check
-    mocker.patch("pathlib.Path.open", mock_open(read_data=MINIMAL_VALID_YAML)) # Use mock_open
+
+    """LOADER_UT_001: Verify successful loading of minimal valid config."""
+    # Use helper to mock file read
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=MINIMAL_VALID_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(MINIMAL_VALID_YAML)) # Remove safe_load mock
     # mocker.patch("os.path.exists", return_value=True) # Replaced with pathlib mock
     config = load_and_validate_config(Path("mock_path/config.yaml")) # Pass a real Path object
@@ -136,9 +139,11 @@ def test_load_minimal_valid_config(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_full_valid_config(mocker):
-    """LOADER_UT_002: Verify successful loading with all optional fields."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=FULL_VALID_YAML))
+
+    """LOADER_UT_002: Verify successful loading with all optional fields."""
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=FULL_VALID_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(FULL_VALID_YAML))
     config = load_and_validate_config(Path("mock_path/config.yaml"))
     assert isinstance(config, GlobalAgentConfig)
@@ -165,9 +170,11 @@ def test_load_full_valid_config(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_groups_with_restrictions(mocker):
-    """LOADER_UT_003: Verify successful loading with groups containing restrictions."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=GROUPS_WITH_RESTRICTIONS_YAML))
+
+    """LOADER_UT_003: Verify successful loading with groups containing restrictions."""
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=GROUPS_WITH_RESTRICTIONS_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(GROUPS_WITH_RESTRICTIONS_YAML))
     # mocker.patch("os.path.exists", return_value=True) # Replaced with pathlib mock
     config = load_and_validate_config(Path("mock_path/config.yaml")) # Pass a real Path object
@@ -190,10 +197,12 @@ def test_load_groups_with_restrictions(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_invalid_yaml_syntax(mocker):
-    """LOADER_UT_101: Verify handling of invalid YAML syntax."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    # Use mock_open for the file read
-    mocker.patch("pathlib.Path.open", mock_open(read_data=INVALID_YAML_SYNTAX))
+
+    """LOADER_UT_101: Verify handling of invalid YAML syntax."""
+    # Use helper
+    # Note: yaml.safe_load will raise the error, so we just need to provide the content.
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=INVALID_YAML_SYNTAX, exists=True)
     # mocker.patch("yaml.safe_load", side_effect=yaml.YAMLError("Syntax Error")) # Remove safe_load mock
     # mocker.patch("os.path.exists", return_value=True)
     with pytest.raises(ConfigLoadError): # Expect custom exception
@@ -201,9 +210,11 @@ def test_load_invalid_yaml_syntax(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_non_yaml_content(mocker):
-    """LOADER_UT_102: Verify handling of non-YAML file content."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=NOT_YAML_CONTENT))
+
+    """LOADER_UT_102: Verify handling of non-YAML file content."""
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=NOT_YAML_CONTENT, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(NOT_YAML_CONTENT)) # Remove safe_load mock
     # mocker.patch("os.path.exists", return_value=True)
     # Expect ConfigValidationError because Pydantic validation will fail
@@ -214,9 +225,11 @@ def test_load_non_yaml_content(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_missing_required_field(mocker):
-    """LOADER_UT_201: Verify handling of missing required fields."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=MISSING_REQUIRED_FIELD_YAML))
+
+    """LOADER_UT_201: Verify handling of missing required fields."""
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=MISSING_REQUIRED_FIELD_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(MISSING_REQUIRED_FIELD_YAML))
     # mocker.patch("os.path.exists", return_value=True)
     with pytest.raises(ConfigValidationError): # Expect custom exception
@@ -224,9 +237,11 @@ def test_load_missing_required_field(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_incorrect_data_type(mocker):
-    """LOADER_UT_202: Verify handling of incorrect data types."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=INCORRECT_DATA_TYPE_YAML))
+
+    """LOADER_UT_202: Verify handling of incorrect data types."""
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=INCORRECT_DATA_TYPE_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(INCORRECT_DATA_TYPE_YAML))
     # mocker.patch("os.path.exists", return_value=True)
     with pytest.raises(ConfigValidationError): # Expect custom exception
@@ -234,9 +249,11 @@ def test_load_incorrect_data_type(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_invalid_nested_model(mocker):
-    """LOADER_UT_203: Verify handling of invalid nested model data."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=INVALID_NESTED_MODEL_YAML))
+
+    """LOADER_UT_203: Verify handling of invalid nested model data."""
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=INVALID_NESTED_MODEL_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(INVALID_NESTED_MODEL_YAML))
     # mocker.patch("os.path.exists", return_value=True)
     with pytest.raises(ConfigValidationError): # Expect custom exception
@@ -244,9 +261,11 @@ def test_load_invalid_nested_model(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_invalid_url(mocker):
-    """LOADER_UT_204: Verify handling of invalid URL format."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=INVALID_URL_YAML))
+
+    """LOADER_UT_204: Verify handling of invalid URL format."""
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=INVALID_URL_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(INVALID_URL_YAML))
     # mocker.patch("os.path.exists", return_value=True)
     with pytest.raises(ConfigValidationError): # Expect custom exception
@@ -255,9 +274,11 @@ def test_load_invalid_url(mocker):
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_extra_field(mocker):
     """LOADER_UT_205: Verify handling of extra fields when Extra.forbid is set."""
-    # This assumes GlobalAgentConfig uses Extra.forbid (or equivalent in Pydantic v2+)
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=EXTRA_FIELD_YAML))
+
+    # This assumes GlobalAgentConfig uses Extra.forbid (or equivalent in Pydantic v2+)
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=EXTRA_FIELD_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(EXTRA_FIELD_YAML))
     # mocker.patch("os.path.exists", return_value=True)
     with pytest.raises(ConfigValidationError): # Expect custom exception
@@ -265,9 +286,11 @@ def test_load_extra_field(mocker):
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_invalid_group_restriction(mocker):
-    """LOADER_UT_206: Verify handling of invalid structure within groups."""
     mocker.patch("pathlib.Path.is_file", return_value=True)
-    mocker.patch("pathlib.Path.open", mock_open(read_data=INVALID_GROUP_RESTRICTION_YAML))
+
+    """LOADER_UT_206: Verify handling of invalid structure within groups."""
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "mock_path/config.yaml", content=INVALID_GROUP_RESTRICTION_YAML, exists=True)
     # mocker.patch("yaml.safe_load", return_value=yaml.safe_load(INVALID_GROUP_RESTRICTION_YAML))
     # mocker.patch("os.path.exists", return_value=True)
     with pytest.raises(ConfigValidationError): # Expect custom exception
@@ -278,19 +301,23 @@ def test_load_invalid_group_restriction(mocker):
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_file_not_found(mocker):
     """LOADER_UT_301: Verify handling when the config file does not exist."""
-    # Mock the is_file check directly on the Path class
     mocker.patch("pathlib.Path.is_file", return_value=False)
+
+    # Mock the is_file check directly on the Path class
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "non_existent_path/config.yaml", exists=False)
     with pytest.raises(FileNotFoundError):
         # Pass a real Path object, the mock will intercept the is_file call
         load_and_validate_config(Path("non_existent_path/config.yaml"))
 
 @pytest.mark.skip(reason="Config loading refactored; test targets removed functionality.")
 def test_load_permission_error(mocker):
+    mocker.patch("pathlib.Path.is_file", return_value=True)
+
     """LOADER_UT_302: Verify handling when there are permission errors reading the file."""
     # Mock is_file to return True for this path
-    mocker.patch("pathlib.Path.is_file", return_value=True)
-    # Mock the open method on the Path class to raise PermissionError
-    mocker.patch("pathlib.Path.open", side_effect=PermissionError("Permission denied"))
+    # Use helper
+    mocking_utils.mock_file_read(mocker, "permission_denied_path/config.yaml", exists=True, permission_error=True)
 
     with pytest.raises(PermissionError):
         # Pass a real Path object, the mock will intercept the open call

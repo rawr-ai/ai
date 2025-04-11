@@ -6,18 +6,17 @@ import os
 from pathlib import Path
 
 from cli import constants as cli_constants
-from . import constants as test_constants
 @pytest.fixture
 def cli_config_yaml(tmp_path, monkeypatch):
-    agent_config_file_path = tmp_path / test_constants.TEST_AGENTS_FILENAME # Define path first
-    markdown_dir_path = tmp_path / test_constants.TEST_MARKDOWN_DIRNAME # Path object for creation
+    agent_config_file_path = tmp_path / "agent_configs.json" # Define path first
+    markdown_dir_path = tmp_path / "markdown_files" # Path object for creation
 
     config_content = {
         # 'agent_config_file': str(agent_config_file_path), # Removed old key
         cli_constants.MARKDOWN_BASE_DIR: str(markdown_dir_path),
         cli_constants.TARGET_JSON_PATH: str(agent_config_file_path)
     }
-    cli_config_path = tmp_path / test_constants.TEST_CONFIG_FILENAME # Renamed file
+    cli_config_path = tmp_path / "config.yaml" # Renamed file
     with open(cli_config_path, 'w') as f:
         yaml.dump(config_content, f)
     markdown_dir_path.mkdir()

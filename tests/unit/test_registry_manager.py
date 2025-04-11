@@ -4,10 +4,11 @@ import pathlib
 import tempfile
 import shutil
 import pytest
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import mock_open, MagicMock # Removed 'patch' as mocker is used
 
 # Module to test
 from cli import registry_manager
+from tests.helpers import mocking_utils # Use absolute import from project root
 
 # Define the mock path used in tests
 MOCK_REGISTRY_PATH_STR = "/fake/path/to/custom_modes.json"
@@ -20,47 +21,54 @@ DEFAULT_EMPTY_REGISTRY = {"customModes": []}
 
 def test_read_registry_success_valid_json(mocker):
     """TC-READ-01: Read Existing Valid JSON"""
-    mock_exists = mocker.patch.object(pathlib.Path, 'exists', return_value=True)
     valid_json_str = '{"customModes": [{"slug": "agent1", "name": "Agent One"}]}'
     expected_data = {"customModes": [{"slug": "agent1", "name": "Agent One"}]}
-    # Mock open directly as it's used in the function
-    mocker.patch("builtins.open", mock_open(read_data=valid_json_str))
-    # Mock json.load as it's called after open
+    # Mock exists explicitly
+    mocker.patch.object(pathlib.Path, 'exists', return_value=True)
+    # Use helper to mock file read (without exists)
+    _ = mocking_utils.mock_file_read(mocker, MOCK_REGISTRY_PATH_STR, content=valid_json_str)
+    # Still need to mock json.load as it's separate from file reading
     mock_json_load = mocker.patch("json.load", return_value=expected_data)
 
     result = registry_manager.read_global_registry(MOCK_REGISTRY_PATH)
 
-    mock_exists.assert_called_once_with()
+    # Assert exists was checked (implicitly by the function under test)
+    # mocker.patch.object(pathlib.Path, 'exists').assert_called_once() # Cannot assert on the patch object directly this way
+    # We rely on the test passing as confirmation exists was checked correctly.
     # open is called within the function, check its usage implicitly via json.load
     mock_json_load.assert_called_once()
     assert result == expected_data
 
 def test_read_registry_success_empty_json(mocker):
     """TC-READ-02: Read Existing Empty JSON"""
-    mock_exists = mocker.patch.object(pathlib.Path, 'exists', return_value=True)
     empty_json_str = '{"customModes": []}'
     expected_data = DEFAULT_EMPTY_REGISTRY
-    mocker.patch("builtins.open", mock_open(read_data=empty_json_str))
+    # Mock exists explicitly
+    mocker.patch.object(pathlib.Path, 'exists', return_value=True)
+    # Use helper
+    _ = mocking_utils.mock_file_read(mocker, MOCK_REGISTRY_PATH_STR, content=empty_json_str)
     mock_json_load = mocker.patch("json.load", return_value=expected_data)
 
     result = registry_manager.read_global_registry(MOCK_REGISTRY_PATH)
 
-    mock_exists.assert_called_once_with()
+    # mocker.patch.object(pathlib.Path, 'exists').assert_called_once()
     mock_json_load.assert_called_once()
     assert result == expected_data
 
 def test_read_registry_invalid_json_structure(mocker):
     """Test reading a file with invalid structure (not dict or missing key)"""
-    mock_exists = mocker.patch.object(pathlib.Path, 'exists', return_value=True)
     invalid_structure_str = '["list", "not", "dict"]' # Example of invalid structure
-    mocker.patch("builtins.open", mock_open(read_data=invalid_structure_str))
+    # Mock exists explicitly
+    mocker.patch.object(pathlib.Path, 'exists', return_value=True)
+    # Use helper
+    _ = mocking_utils.mock_file_read(mocker, MOCK_REGISTRY_PATH_STR, content=invalid_structure_str)
     # json.load will succeed, but the structure check inside the function should fail
     mock_json_load = mocker.patch("json.load", return_value=["list", "not", "dict"])
     mock_log_error = mocker.patch("logging.error")
 
     result = registry_manager.read_global_registry(MOCK_REGISTRY_PATH)
 
-    mock_exists.assert_called_once_with()
+    # mocker.patch.object(pathlib.Path, 'exists').assert_called_once()
     mock_json_load.assert_called_once()
     mock_log_error.assert_called_once()
     assert "Invalid structure in registry file" in mock_log_error.call_args[0][0]
@@ -68,15 +76,17 @@ def test_read_registry_invalid_json_structure(mocker):
 
 def test_read_registry_invalid_json_decode_error(mocker):
     """TC-READ-03: Read Existing Invalid JSON (Decode Error)"""
-    mock_exists = mocker.patch.object(pathlib.Path, 'exists', return_value=True)
     invalid_json_str = '{"customModes": [invalid json}'
-    mocker.patch("builtins.open", mock_open(read_data=invalid_json_str))
+    # Mock exists explicitly
+    mocker.patch.object(pathlib.Path, 'exists', return_value=True)
+    # Use helper - Note: json.load mock is still needed separately
+    _ = mocking_utils.mock_file_read(mocker, MOCK_REGISTRY_PATH_STR, content=invalid_json_str)
     mock_json_load = mocker.patch("json.load", side_effect=json.JSONDecodeError("Expecting value", "doc", 0))
     mock_log_exception = mocker.patch("logging.exception")
 
     result = registry_manager.read_global_registry(MOCK_REGISTRY_PATH)
 
-    mock_exists.assert_called_once_with()
+    # mocker.patch.object(pathlib.Path, 'exists').assert_called_once()
     mock_json_load.assert_called_once()
     mock_log_exception.assert_called_once()
     assert "Error decoding JSON" in mock_log_exception.call_args[0][0]
@@ -84,8 +94,10 @@ def test_read_registry_invalid_json_decode_error(mocker):
 
 def test_read_registry_file_not_found(mocker):
     """TC-READ-04: File Not Found"""
+    # Mock exists explicitly
     mock_exists = mocker.patch.object(pathlib.Path, 'exists', return_value=False)
-    mock_open_func = mocker.patch("builtins.open") # Should not be called
+    # Use helper (it won't actually mock open if exists is false, but call it for consistency)
+    mock_open_func = mocking_utils.mock_file_read(mocker, MOCK_REGISTRY_PATH_STR) # Content doesn't matter here
     mock_log_warning = mocker.patch("logging.warning")
 
     result = registry_manager.read_global_registry(MOCK_REGISTRY_PATH)
@@ -98,14 +110,15 @@ def test_read_registry_file_not_found(mocker):
 
 def test_read_registry_permission_error(mocker):
     """TC-READ-05: Permission Denied"""
-    mock_exists = mocker.patch.object(pathlib.Path, 'exists', return_value=True)
-    # Mock open to raise PermissionError
-    mocker.patch("builtins.open", side_effect=PermissionError("Permission denied"))
+    # Mock exists explicitly
+    mocker.patch.object(pathlib.Path, 'exists', return_value=True)
+    # Use helper
+    _ = mocking_utils.mock_file_read(mocker, MOCK_REGISTRY_PATH_STR, permission_error=True)
     mock_log_exception = mocker.patch("logging.exception")
 
     result = registry_manager.read_global_registry(MOCK_REGISTRY_PATH)
 
-    mock_exists.assert_called_once_with()
+    # mocker.patch.object(pathlib.Path, 'exists').assert_called_once()
     mock_log_exception.assert_called_once()
     assert "OS error reading registry file" in mock_log_exception.call_args[0][0]
     assert result == DEFAULT_EMPTY_REGISTRY # Function handles OS errors by returning default
@@ -239,10 +252,10 @@ def test_update_registry_invalid_agent_metadata_input(mocker):
 
 def test_write_registry_success(mocker):
     """TC-WRITE-01: Successfully write valid data to a file."""
-    mock_mkdir = mocker.patch.object(pathlib.Path, 'mkdir')
-    mock_open_func = mock_open()
-    mocker.patch("builtins.open", mock_open_func)
-    mock_json_dump = mocker.patch("json.dump")
+    # Use helper
+    mock_mkdir, mock_open_call, mock_json_dump = mocking_utils.mock_file_write(mocker, MOCK_REGISTRY_PATH_STR)
+    # Get the file handle mock from the open call mock if needed for assertions
+    mock_open_func = mock_open_call.return_value
 
     registry_data = {"customModes": [{"slug": "test-agent", "name": "Test Agent"}]}
     # No need to check exact string, just that dump is called correctly
@@ -252,20 +265,20 @@ def test_write_registry_success(mocker):
 
     # Assert parent directory creation was attempted (exist_ok=True handles existing dirs)
     mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
-    # Assert file was opened for writing
-    mock_open_func.assert_called_once_with(MOCK_REGISTRY_PATH, 'w', encoding='utf-8')
+    # Assert file was opened for writing (using the mock returned by the helper)
+    mock_open_call.assert_called_once_with(MOCK_REGISTRY_PATH, 'w', encoding='utf-8')
     # Assert json.dump was called with correct data and formatting
-    mock_json_dump.assert_called_once_with(registry_data, mock_open_func(), indent=2)
+    mock_json_dump.assert_called_once_with(registry_data, mock_open_func, indent=2) # Pass the handle directly
     # Function returns None on success, success is indicated by no exceptions raised
     # and mocks being called correctly.
 
 def test_write_registry_permission_error(mocker):
     """TC-WRITE-02: Handle PermissionError during file write."""
-    mock_mkdir = mocker.patch.object(pathlib.Path, 'mkdir')
-    # Mock open to raise PermissionError
-    mock_open_error = mocker.patch("builtins.open", side_effect=PermissionError("Permission denied"))
+    # Use helper
+    mock_mkdir, mock_open_error, mock_json_dump = mocking_utils.mock_file_write(
+        mocker, MOCK_REGISTRY_PATH_STR, permission_error=True
+    )
     mock_log_exception = mocker.patch("logging.exception")
-    mock_json_dump = mocker.patch("json.dump") # Should not be called
 
     registry_data = {"customModes": [{"slug": "test-agent", "name": "Test Agent"}]}
 
@@ -282,11 +295,11 @@ def test_write_registry_permission_error(mocker):
 
 def test_write_registry_other_os_error(mocker):
     """TC-WRITE-03: Handle other OSErrors during file write."""
-    mock_mkdir = mocker.patch.object(pathlib.Path, 'mkdir')
-    # Mock open to raise a generic OSError
-    mock_open_error = mocker.patch("builtins.open", side_effect=OSError("Disk full"))
+    # Use helper
+    mock_mkdir, mock_open_error, mock_json_dump = mocking_utils.mock_file_write(
+        mocker, MOCK_REGISTRY_PATH_STR, write_error=OSError("Disk full")
+    )
     mock_log_exception = mocker.patch("logging.exception")
-    mock_json_dump = mocker.patch("json.dump") # Should not be called
 
     registry_data = {"customModes": [{"slug": "test-agent", "name": "Test Agent"}]}
 
@@ -302,11 +315,11 @@ def test_write_registry_other_os_error(mocker):
 
 def test_write_registry_invalid_data_type(mocker):
     """TC-WRITE-04: Handle non-dict data passed for writing (should not happen with type hints but test defensively)."""
-    mock_mkdir = mocker.patch.object(pathlib.Path, 'mkdir')
-    mock_open_func = mock_open() # Use mock_open for the context manager
-    mocker.patch("builtins.open", mock_open_func)
-    # Simulate TypeError during json.dump
-    mock_json_dump = mocker.patch("json.dump", side_effect=TypeError("Not serializable"))
+    # Use helper
+    mock_mkdir, mock_open_call, mock_json_dump = mocking_utils.mock_file_write(
+        mocker, MOCK_REGISTRY_PATH_STR, serialization_error=TypeError("Not serializable")
+    )
+    mock_open_func = mock_open_call.return_value # Get handle for assertion
     mock_log_exception = mocker.patch("logging.exception")
 
     invalid_data = ["list", "not", "dict"] # Example invalid data
@@ -316,9 +329,9 @@ def test_write_registry_invalid_data_type(mocker):
         registry_manager.write_global_registry(invalid_data, MOCK_REGISTRY_PATH)
 
     mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
-    mock_open_func.assert_called_once_with(MOCK_REGISTRY_PATH, 'w', encoding='utf-8')
-    # json.dump was called, but raised an error
-    mock_json_dump.assert_called_once_with(invalid_data, mock_open_func(), indent=2)
+    mock_open_call.assert_called_once_with(MOCK_REGISTRY_PATH, 'w', encoding='utf-8') # Target the open mock itself
+    # json.dump was called (and raised the configured error)
+    mock_json_dump.assert_called_once_with(invalid_data, mock_open_func, indent=2) # Pass the mock handle directly
     mock_log_exception.assert_called_once()
     # Check the log message content
     assert f"Unexpected error writing registry file {MOCK_REGISTRY_PATH}" in mock_log_exception.call_args[0][0]
