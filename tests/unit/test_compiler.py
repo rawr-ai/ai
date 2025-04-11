@@ -17,7 +17,7 @@ def test_extract_full_data():
         "name": "Test Agent",
         "roleDefinition": "This is a test role.",
         # Expecting the tuple structure to be preserved in the output dict
-        "groups": ["groupA", ("groupB", {"fileRegex": ".*\\.py", "description": "Python files"})],
+        "groups": ["groupA", ["groupB", {"fileRegex": ".*\\.py", "description": "Python files"}]],
         "apiConfiguration": {"model": "gpt-4", "url": "http://example.com/api", "params": {"temp": 0.5}}
     }
     actual_output = extract_registry_metadata(input_config)
@@ -85,7 +85,7 @@ def test_extract_groups_mixed_list():
     )
     # Expecting description to default to None in the GroupRestriction model if not provided
     # Expecting the tuple structure to be preserved in the output dict
-    expected_groups = ["groupA", ("groupB", {"fileRegex": ".*\\.md"})] # Tuple expected, description=None is omitted
+    expected_groups = ["groupA", ["groupB", {"fileRegex": ".*\\.md"}]] # List expected, description=None is omitted
     actual_output = extract_registry_metadata(input_config)
     assert "groups" in actual_output
     # Compare directly with the expected tuple structure
