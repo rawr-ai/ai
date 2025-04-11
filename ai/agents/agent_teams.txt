@@ -1,0 +1,36 @@
+command:
+  - orchestrator-generic
+  - coordinator-pb
+
+defense:
+  - debug
+  - review
+  - test
+
+offense:
+  - implement
+  - refactor
+
+special:
+  - arch-install
+  - architect
+  - git
+  - kg-engineer
+  - orchestrator-install
+
+support:
+  - document
+
+testing:
+  - temp-test-agent
+
+training:
+  - position-coach
+  - prompt
+
+util:
+  - ask
+  - diagram
+  - plan
+  - scan
+  - search
