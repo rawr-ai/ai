@@ -15,8 +15,8 @@ classifiers = [
 ]
 dependencies = [
     "typer[all]",
-    "pydantic",
-    "PyYAML",
+    "pydantic>=2.0,<3.0",  # Using explicit bounds instead of ^ for broader compatibility
+    "PyYAML>=6.0,<7.0",    # Using explicit bounds instead of ^
 ]
 
 
