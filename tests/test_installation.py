@@ -117,21 +117,14 @@ def test_rawr_entry_point_help(isolated_install_env):
     env_path, python_exec = isolated_install_env
     result = run_rawr_command("--help", env_path, python_exec)
     assert result.returncode == 0, f"rawr --help exited with code {result.returncode}"
-    assert "Usage: rawr [OPTIONS] COMMAND [ARGS]..." in result.stdout, "'Usage:' string not found in rawr --help output."
-    assert "CLI tool to manage Agent Configurations from Markdown files." in result.stdout # Check for description
-    assert "add" in result.stdout # Check for a command
+    assert " Usage: rawr [OPTIONS] AGENT_SLUG" in result.stdout, "'Usage:' string not found in rawr --help output."
+    assert "Loads, validates, and compiles an agent's config.yaml, updating the global" in result.stdout # Check for first part of description
+    assert "registry." in result.stdout # Check for second part of description
+    assert "compile" in result.stdout # Check for the new compile command
     print("test_rawr_entry_point_help: Successfully executed rawr --help.")
 
 
-def test_rawr_add_command_help(isolated_install_env):
-    """Test if a subcommand like 'rawr add --help' works."""
-    env_path, python_exec = isolated_install_env
-    result = run_rawr_command(["add", "--help"], env_path, python_exec)
-    assert result.returncode == 0, f"rawr add --help exited with code {result.returncode}"
-    assert "Usage: rawr add [OPTIONS]" in result.stdout, "'Usage:' string not found in rawr add --help output."
-    # Add more specific checks based on the expected output of 'rawr add --help'
-    assert "Adds a new agent configuration from a Markdown file to the JSON store." in result.stdout # Check for description
-    print("test_rawr_add_command_help: Successfully executed rawr add --help.")
+# Removed test_rawr_add_command_help as the 'add' command no longer exists.
 
 # Add more tests as needed, e.g., running a basic functional command if one exists
 # that doesn't require complex setup within the test environment.

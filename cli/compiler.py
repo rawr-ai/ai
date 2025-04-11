@@ -8,12 +8,11 @@ def extract_registry_metadata(config: GlobalAgentConfig) -> Dict[str, Any]:
     from a validated GlobalAgentConfig object.
     Excludes fields not relevant to the registry (e.g., customInstructions).
     """
-    # Use Pydantic's .dict() method to serialize the relevant fields.
-    # 'include' specifies the fields we want.
-    # 'exclude_none=True' ensures that if apiConfiguration is None, it's not included in the output dict.
-    # The structure of nested fields like 'groups' and 'apiConfiguration' is preserved.
-    registry_data = config.dict(
+    # Use Pydantic's model_dump with mode='json' to handle serialization,
+    # including complex types like Union. Explicitly include only registry fields.
+    registry_data = config.model_dump(
+        mode='json', # Use JSON-compatible serialization
         include={'slug', 'name', 'roleDefinition', 'groups', 'apiConfiguration'},
-        exclude_none=True
+        exclude_none=True # Exclude apiConfiguration if it's None
     )
     return registry_data

@@ -108,39 +108,23 @@ def write_global_registry(registry_data: dict, registry_path: pathlib.Path = GLO
         OSError: If file I/O operations fail.
         Exception: For any other unexpected errors during the write process.
     """
+    # Simplified write logic: write directly to the target file.
+    # Note: This is less safe against corruption if the process is interrupted.
     try:
         # Ensure the parent directory exists
         registry_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Write to a temporary file in the same directory
-        # tempfile.NamedTemporaryFile creates file with 600 permissions
-        with tempfile.NamedTemporaryFile('w', delete=False, dir=registry_path.parent, encoding='utf-8', suffix='.tmp') as temp_file:
-            json.dump(registry_data, temp_file, indent=2) # Use indent=2 for readability
-            temp_path = pathlib.Path(temp_file.name)
-
-        # Atomically replace the original file with the temporary file
-        # On POSIX systems, os.rename is atomic. On Windows, it might not be if the destination exists.
-        # shutil.move is generally safer across platforms for replacing files.
-        shutil.move(str(temp_path), str(registry_path))
+        # Write directly to the final destination file
+        with open(registry_path, 'w', encoding='utf-8') as f:
+            json.dump(registry_data, f, indent=2) # Use indent=2 for readability
+        
         logging.info(f"Successfully wrote updated registry to {registry_path}")
 
     except OSError as e:
         logging.exception(f"OS error writing registry file {registry_path}: {e}")
-        # Attempt to clean up the temporary file if it still exists
-        if 'temp_path' in locals() and temp_path.exists():
-            try:
-                temp_path.unlink()
-            except OSError:
-                logging.exception(f"Failed to clean up temporary file {temp_path}")
         raise # Re-raise the original error
     except Exception as e:
         logging.exception(f"Unexpected error writing registry file {registry_path}: {e}")
-        # Attempt to clean up the temporary file if it still exists
-        if 'temp_path' in locals() and temp_path.exists():
-            try:
-                temp_path.unlink()
-            except OSError:
-                logging.exception(f"Failed to clean up temporary file {temp_path}")
         raise # Re-raise the original error
 
 # Example usage (for testing purposes, can be removed later)
