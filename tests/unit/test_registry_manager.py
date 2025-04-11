@@ -236,6 +236,89 @@ def test_update_registry_invalid_agent_metadata_input(mocker):
     assert result == current_data # No change expected
 
 # === Test Suite: write_global_registry ===
-# NOTE: Tests related to the old safe-write mechanism (using tempfile and shutil.move)
-# have been removed as the implementation now uses a direct write.
-# New tests should be added to cover the current direct-write logic and error handling.
+
+def test_write_registry_success(mocker):
+    """TC-WRITE-01: Successfully write valid data to a file."""
+    mock_mkdir = mocker.patch.object(pathlib.Path, 'mkdir')
+    mock_open_func = mock_open()
+    mocker.patch("builtins.open", mock_open_func)
+    mock_json_dump = mocker.patch("json.dump")
+
+    registry_data = {"customModes": [{"slug": "test-agent", "name": "Test Agent"}]}
+    # No need to check exact string, just that dump is called correctly
+    # expected_json_str = json.dumps(registry_data, indent=4)
+
+    result = registry_manager.write_global_registry(registry_data, MOCK_REGISTRY_PATH)
+
+    # Assert parent directory creation was attempted (exist_ok=True handles existing dirs)
+    mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+    # Assert file was opened for writing
+    mock_open_func.assert_called_once_with(MOCK_REGISTRY_PATH, 'w', encoding='utf-8')
+    # Assert json.dump was called with correct data and formatting
+    mock_json_dump.assert_called_once_with(registry_data, mock_open_func(), indent=2)
+    # Function returns None on success, success is indicated by no exceptions raised
+    # and mocks being called correctly.
+
+def test_write_registry_permission_error(mocker):
+    """TC-WRITE-02: Handle PermissionError during file write."""
+    mock_mkdir = mocker.patch.object(pathlib.Path, 'mkdir')
+    # Mock open to raise PermissionError
+    mock_open_error = mocker.patch("builtins.open", side_effect=PermissionError("Permission denied"))
+    mock_log_exception = mocker.patch("logging.exception")
+    mock_json_dump = mocker.patch("json.dump") # Should not be called
+
+    registry_data = {"customModes": [{"slug": "test-agent", "name": "Test Agent"}]}
+
+    # Expect PermissionError to be raised
+    with pytest.raises(PermissionError, match="Permission denied"):
+        registry_manager.write_global_registry(registry_data, MOCK_REGISTRY_PATH)
+
+    mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+    mock_open_error.assert_called_once_with(MOCK_REGISTRY_PATH, 'w', encoding='utf-8')
+    mock_log_exception.assert_called_once()
+    # Check the log message content (adjust based on actual log format if needed)
+    assert f"OS error writing registry file {MOCK_REGISTRY_PATH}" in mock_log_exception.call_args[0][0]
+    mock_json_dump.assert_not_called()
+
+def test_write_registry_other_os_error(mocker):
+    """TC-WRITE-03: Handle other OSErrors during file write."""
+    mock_mkdir = mocker.patch.object(pathlib.Path, 'mkdir')
+    # Mock open to raise a generic OSError
+    mock_open_error = mocker.patch("builtins.open", side_effect=OSError("Disk full"))
+    mock_log_exception = mocker.patch("logging.exception")
+    mock_json_dump = mocker.patch("json.dump") # Should not be called
+
+    registry_data = {"customModes": [{"slug": "test-agent", "name": "Test Agent"}]}
+
+    # Expect OSError to be raised
+    with pytest.raises(OSError, match="Disk full"):
+        registry_manager.write_global_registry(registry_data, MOCK_REGISTRY_PATH)
+
+    mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+    mock_open_error.assert_called_once_with(MOCK_REGISTRY_PATH, 'w', encoding='utf-8')
+    mock_log_exception.assert_called_once()
+    assert f"OS error writing registry file {MOCK_REGISTRY_PATH}" in mock_log_exception.call_args[0][0]
+    mock_json_dump.assert_not_called()
+
+def test_write_registry_invalid_data_type(mocker):
+    """TC-WRITE-04: Handle non-dict data passed for writing (should not happen with type hints but test defensively)."""
+    mock_mkdir = mocker.patch.object(pathlib.Path, 'mkdir')
+    mock_open_func = mock_open() # Use mock_open for the context manager
+    mocker.patch("builtins.open", mock_open_func)
+    # Simulate TypeError during json.dump
+    mock_json_dump = mocker.patch("json.dump", side_effect=TypeError("Not serializable"))
+    mock_log_exception = mocker.patch("logging.exception")
+
+    invalid_data = ["list", "not", "dict"] # Example invalid data
+
+    # Expect TypeError to be raised due to json.dump failure
+    with pytest.raises(TypeError, match="Not serializable"):
+        registry_manager.write_global_registry(invalid_data, MOCK_REGISTRY_PATH)
+
+    mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+    mock_open_func.assert_called_once_with(MOCK_REGISTRY_PATH, 'w', encoding='utf-8')
+    # json.dump was called, but raised an error
+    mock_json_dump.assert_called_once_with(invalid_data, mock_open_func(), indent=2)
+    mock_log_exception.assert_called_once()
+    # Check the log message content
+    assert f"Unexpected error writing registry file {MOCK_REGISTRY_PATH}" in mock_log_exception.call_args[0][0]
