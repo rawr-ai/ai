@@ -98,7 +98,7 @@ This document outlines the technical steps, considerations, and common practices
 
 *   **Version Control (Git):**
     *   Ensure the local repository is up-to-date with the target baseline (e.g., `git pull origin main`).
-    *   Create a dedicated feature branch based on the agreed naming convention (e.g., `git checkout -b refactor/payment-processor-strategy` from `main`). Refer to `ai/docs/orchestrator_SOPs.md` for specific branching strategies.
+    *   Create a dedicated feature branch based on the agreed naming convention (e.g., `git checkout -b refactor/payment-processor-strategy` from `main`). Refer to `ai/context/orchestrator_SOPs.md` for specific branching strategies.
     *   Verify the baseline branch is clean (all tests pass, no linting errors).
 *   **Tooling:**
     *   Configure IDEs with relevant plugins for refactoring, linting, and testing.
@@ -123,7 +123,7 @@ This document outlines the technical steps, considerations, and common practices
 
 ## 7. Git Integration Points
 
-**Goal:** Leverage Git effectively throughout the workflow for safety, collaboration, and traceability, adhering to established SOPs (e.g., `ai/docs/orchestrator_SOPs.md`).
+**Goal:** Leverage Git effectively throughout the workflow for safety, collaboration, and traceability, adhering to established SOPs (e.g., `ai/context/orchestrator_SOPs.md`).
 
 **Key Integration Points:**
 

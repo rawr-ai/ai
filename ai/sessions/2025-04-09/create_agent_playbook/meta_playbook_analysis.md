@@ -14,7 +14,7 @@ To create a formal playbook documenting the process for generating new agents/cu
     *   **Output:** A structured workflow plan and initiation of the first step (`analyze`) via `new_task`.
 
 2.  **Discovery & Analysis (`analyze` mode):**
-    *   **Input:** Workflow plan instructions, paths to context files (`ai/context/*`, `scripts/agent_config_manager/commands.py`, `ai/agents`, `ai/playbooks`, `ai/docs/orchestrator_SOPs.md`).
+    *   **Input:** Workflow plan instructions, paths to context files (`ai/context/*`, `scripts/agent_config_manager/commands.py`, `ai/agents`, `ai/playbooks`, `ai/context/orchestrator_SOPs.md`).
     *   **Action:** Read and synthesized information from the specified sources to understand and document the *current* implicit/explicit process for creating a new agent (steps, conventions, tools, roles).
     *   **Output:** A structured summary document: `ai/sessions/2025-04-09/create_agent_playbook/analysis_summary.md`.
 
