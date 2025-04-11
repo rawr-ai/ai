@@ -8,7 +8,7 @@ from pathlib import Path
 from cli import constants as cli_constants
 from . import constants as test_constants
 @pytest.fixture
-def cli_config_yaml(tmp_path):
+def cli_config_yaml(tmp_path, monkeypatch):
     agent_config_file_path = tmp_path / test_constants.TEST_AGENTS_FILENAME # Define path first
     markdown_dir_path = tmp_path / test_constants.TEST_MARKDOWN_DIRNAME # Path object for creation
 
@@ -25,18 +25,13 @@ def cli_config_yaml(tmp_path):
     with open(agent_config_file_path, 'w') as f:
         json.dump({cli_constants.CUSTOM_MODES: []}, f)
 
-    # Set environment variable for settings.py to find this config
+    # Use monkeypatch to set the environment variable for the duration of the test
     env_var_name = cli_constants.ENV_CONFIG_PATH
-    original_env_value = os.environ.get(env_var_name)
-    os.environ[env_var_name] = str(cli_config_path)
+    monkeypatch.setenv(env_var_name, str(cli_config_path))
 
-    yield cli_config_path, agent_config_file_path, markdown_dir_path # Yield for cleanup
+    yield cli_config_path, agent_config_file_path, markdown_dir_path # Yield paths
 
-    # Cleanup: Unset environment variable
-    if original_env_value is None:
-        del os.environ[env_var_name]
-    else:
-        os.environ[env_var_name] = original_env_value
+    # No explicit cleanup needed, monkeypatch handles it
 
 @pytest.fixture
 def create_markdown_file_factory():

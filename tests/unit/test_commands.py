@@ -64,6 +64,7 @@ def mock_new_config():
 @pytest.fixture(autouse=True)
 def mock_dependencies():
     """Auto-applied fixture to mock dependencies for all tests in this module."""
+    # Explicit paths used after removing tests/constants.py mock paths
     with patch('cli.agent_config.commands.load_configs') as mock_load, \
          patch('cli.agent_config.commands.save_configs') as mock_save, \
          patch('cli.agent_config.commands.parse_markdown') as mock_parse:
