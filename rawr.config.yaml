@@ -3,7 +3,7 @@
 
 # Directory where individual agent configurations (config.yaml, system_prompt.md, etc.) are stored.
 # Path is relative to this config file's location (project root).
-agent_config_dir: cli/agent_config
+agent_config_dir: agents/
 
 # Path to the global JSON file storing custom mode definitions managed by the CLI.
 # Path is relative to this config file's location (project root).
