@@ -4,12 +4,14 @@ import logging
 from pathlib import Path
 from typing_extensions import Annotated
 
+import yaml # Added for parsing
 from . import constants
 from . import config_loader
 from . import compiler
 from . import registry_manager
+from .models import GlobalAgentConfig # Added for validation
 from pydantic import ValidationError as ConfigValidationError # Use Pydantic's error
-
+# from . import config_loader # This was duplicated, removed. The one above is sufficient.
 # Temporarily import from current structure - will be updated in Step 6 - COMMENTING OUT
 # try:
 # from cli.agent_config.commands import (
@@ -38,9 +40,9 @@ from pydantic import ValidationError as ConfigValidationError # Use Pydantic's e
 
 # --- Constants & Configuration ---
 # Assuming the global registry path is defined in constants
-# If not, this needs adjustment based on actual config loading (e.g., from cli/config.yaml)
-GLOBAL_REGISTRY_PATH = getattr(constants, 'GLOBAL_REGISTRY_PATH', Path('custom_modes.json')) # Default fallback
-AGENT_CONFIG_DIR = Path(getattr(constants, 'AGENT_CONFIG_DIR', 'cli/agent_config')) # Default fallback
+# Paths are now loaded via the centralized config_loader
+GLOBAL_REGISTRY_PATH = config_loader.get_global_registry_path()
+AGENT_CONFIG_DIR = config_loader.get_agent_config_dir()
 # --- Logging Setup ---
 # Basic logging configuration (can be enhanced later)
 logging.basicConfig(
@@ -209,8 +211,11 @@ def compile_agent_config(
     """
     logger.info(f"CLI 'compile' command invoked for agent slug: {agent_slug}")
 
-    agent_config_path = AGENT_CONFIG_DIR / agent_slug / "config.yaml" # Use literal filename
-    global_registry_path = GLOBAL_REGISTRY_PATH.resolve() # Ensure absolute path
+    # Use paths loaded from the config system
+    # Use the module-level constant which can be patched by tests
+    agent_config_path = AGENT_CONFIG_DIR / agent_slug / "config.yaml"
+    # Use the module-level constant which can be patched by tests
+    global_registry_path = GLOBAL_REGISTRY_PATH
 
     logger.debug(f"Agent config path determined: {agent_config_path}")
     logger.debug(f"Global registry path determined: {global_registry_path}")
@@ -220,17 +225,28 @@ def compile_agent_config(
     # 1. Load and Validate Agent Config
     typer.echo(f"Loading and validating config for '{agent_slug}' from {agent_config_path}...")
     try:
-        agent_config = config_loader.load_and_validate_config(agent_config_path)
+        # Read the config file content
+        config_content = agent_config_path.read_text()
+        # Parse the YAML content
+        config_data = yaml.safe_load(config_content)
+        if not isinstance(config_data, dict):
+             raise ConfigValidationError(f"Config file {agent_config_path} did not parse into a dictionary.")
+        # Validate the data using the Pydantic model
+        agent_config = GlobalAgentConfig.model_validate(config_data)
         typer.echo(f"✅ Config for '{agent_slug}' loaded and validated successfully.")
         logger.info(f"Successfully loaded and validated config for {agent_slug}")
     except FileNotFoundError:
         logger.error(f"Agent config file not found at {agent_config_path}")
         typer.echo(f"❌ Error: Config file not found for agent '{agent_slug}' at expected path: {agent_config_path}", err=True)
         raise
-    except ConfigValidationError as e:
+    except yaml.YAMLError as e:
+        logger.error(f"YAML parsing failed for {agent_config_path}: {e}")
+        typer.echo(f"❌ Error: Failed to parse YAML for agent '{agent_slug}'. Details:\n{e}", err=True)
+        raise e # Re-raise YAML error
+    except ConfigValidationError as e: # Catches Pydantic validation errors
         logger.error(f"Config validation failed for {agent_slug}: {e}")
         typer.echo(f"❌ Error: Config validation failed for agent '{agent_slug}'. Details:\n{e}", err=True)
-        raise e
+        raise e # Re-raise validation error
     except Exception as e:
         logger.exception(f"Unexpected error loading/validating config for {agent_slug}")
         typer.echo(f"❌ Error: An unexpected error occurred while loading/validating config for '{agent_slug}'. Details: {e}", err=True)

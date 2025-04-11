@@ -1,64 +1,96 @@
 # cli/config_loader.py
-
 import yaml
+import os
 from pathlib import Path
-from typing import Any, Dict
+import sys
 
-import pydantic
+# Determine the project root directory dynamically
+# Assumes this script is in 'cli/' subdirectory relative to the project root
+PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 
-# Assuming models are defined in cli.models as reviewed
-from cli.models import GlobalAgentConfig
+DEFAULT_CONFIG_PATH = PROJECT_ROOT / "rawr.config.yaml"
+LOCAL_CONFIG_PATH = PROJECT_ROOT / "rawr.config.local.yaml"
 
-# Define custom exceptions for better error context
-class ConfigLoadError(Exception):
-    """Custom exception for errors during YAML loading or parsing."""
-    pass
+# Default values in case config files or keys are missing
+DEFAULT_AGENT_CONFIG_DIR = PROJECT_ROOT / "cli/agent_config"
+DEFAULT_GLOBAL_REGISTRY_PATH = PROJECT_ROOT / ".rawr_registry/custom_modes.json"
 
-class ConfigValidationError(Exception):
-    """Custom exception for errors during Pydantic validation."""
-    pass
-
-def load_and_validate_config(file_path: Path) -> GlobalAgentConfig:
+def load_config():
     """
-    Loads a YAML configuration file from the given path, parses it,
-    and validates it against the GlobalAgentConfig Pydantic model.
-
-    Args:
-        file_path: The Path object pointing to the configuration file.
-
-    Returns:
-        A validated GlobalAgentConfig instance.
-
-    Raises:
-        FileNotFoundError: If the configuration file does not exist.
-        PermissionError: If there are permissions issues reading the file.
-        ConfigLoadError: If the file content is not valid YAML.
-        ConfigValidationError: If the YAML content does not match the
-                               GlobalAgentConfig schema.
-        OSError: For other file system related errors during reading.
+    Loads configuration from default, local, and environment variables.
+    Precedence: Env Vars > Local Config > Main Config > Code Defaults.
+    Returns paths as absolute Path objects.
     """
-    if not file_path.is_file():
-        raise FileNotFoundError(f"Configuration file not found: {file_path}")
+    # Start with code defaults
+    config = {
+        'agent_config_dir': DEFAULT_AGENT_CONFIG_DIR,
+        'global_registry_path': DEFAULT_GLOBAL_REGISTRY_PATH,
+    }
 
-    try:
-        with file_path.open('r', encoding='utf-8') as f:
-            raw_config_data = f.read()
-    except PermissionError as e:
-        raise PermissionError(f"Permission denied reading file: {file_path}") from e
-    except OSError as e:
-        # Catch other potential OS errors during file read
-        raise OSError(f"Error reading file: {file_path}") from e
+    # Helper to load and merge from a YAML file
+    def merge_from_yaml(file_path, current_config):
+        if file_path.exists() and file_path.is_file():
+            try:
+                with open(file_path, 'r') as f:
+                    yaml_config = yaml.safe_load(f)
+                    if isinstance(yaml_config, dict): # Ensure it's a dictionary
+                        # Only update keys present in the YAML file
+                        for key in current_config.keys():
+                            if key in yaml_config:
+                                # Resolve path relative to project root
+                                current_config[key] = PROJECT_ROOT / yaml_config[key]
+                    else:
+                         print(f"Warning: Config file {file_path} is not a valid dictionary. Ignoring.", file=sys.stderr)
 
-    try:
-        config_data: Dict[str, Any] = yaml.safe_load(raw_config_data)
-        if config_data is None:
-             # Handle empty YAML file case
-             raise ConfigLoadError(f"YAML file is empty or contains only comments: {file_path}")
-    except yaml.YAMLError as e:
-        raise ConfigLoadError(f"Error parsing YAML file: {file_path}\nDetails: {e}") from e
+            except yaml.YAMLError as e:
+                print(f"Warning: Error parsing {file_path}: {e}. Using previous config values.", file=sys.stderr)
+            except Exception as e:
+                print(f"Warning: Could not read {file_path}: {e}. Using previous config values.", file=sys.stderr)
+        return current_config
 
-    try:
-        validated_config = GlobalAgentConfig.parse_obj(config_data)
-        return validated_config
-    except pydantic.ValidationError as e:
-        raise ConfigValidationError(f"Configuration validation failed for file: {file_path}\nDetails:\n{e}") from e
+    # 1. Load main config file (rawr.config.yaml)
+    config = merge_from_yaml(DEFAULT_CONFIG_PATH, config.copy()) # Use copy to avoid modifying defaults directly yet
+
+    # 2. Load local override config file (rawr.config.local.yaml)
+    config = merge_from_yaml(LOCAL_CONFIG_PATH, config.copy()) # Use copy, local overrides main
+
+    # 3. Load from environment variables (highest precedence)
+    env_agent_config_dir = os.getenv('RAWR_AGENT_CONFIG_DIR')
+    if env_agent_config_dir:
+        # Assume env var path is relative to CWD or absolute
+        config['agent_config_dir'] = Path(env_agent_config_dir).resolve()
+
+    env_global_registry_path = os.getenv('RAWR_GLOBAL_REGISTRY_PATH')
+    if env_global_registry_path:
+        # Assume env var path is relative to CWD or absolute
+        config['global_registry_path'] = Path(env_global_registry_path).resolve()
+
+    # Ensure all paths are absolute Path objects at the end
+    config['agent_config_dir'] = Path(config['agent_config_dir']).resolve()
+    config['global_registry_path'] = Path(config['global_registry_path']).resolve()
+
+    return config
+
+# Load config once on import to be used by other modules
+settings = load_config()
+
+# Provide accessors that return absolute Path objects
+def get_agent_config_dir() -> Path:
+    # Fallback needed if initial loading failed completely for some reason
+    return settings.get('agent_config_dir', DEFAULT_AGENT_CONFIG_DIR).resolve()
+
+def get_global_registry_path() -> Path:
+     # Fallback needed
+    return settings.get('global_registry_path', DEFAULT_GLOBAL_REGISTRY_PATH).resolve()
+
+if __name__ == '__main__':
+    # Example usage/test
+    print("Loaded Configuration (Absolute Paths):")
+    print(f"  Agent Config Dir: {get_agent_config_dir()}")
+    print(f"  Global Registry Path: {get_global_registry_path()}")
+    print(f"\nProject Root used for relative paths: {PROJECT_ROOT}")
+
+    # Test precedence (requires setting env vars or creating local/default files)
+    # Example: export RAWR_AGENT_CONFIG_DIR=/tmp/rawr_agents
+    # Example: echo "global_registry_path: etc/rawr/registry.json" > rawr.config.local.yaml
+    # Example: echo "agent_config_dir: configs/agents" > rawr.config.yaml

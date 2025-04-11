@@ -4,18 +4,18 @@ import pathlib
 import shutil
 import tempfile
 import logging
+from . import config_loader # Import the new global config loader
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Define the global registry path (Consider making this configurable or passed in)
-# For now, hardcoding based on the confirmed path for macOS/Cursor
-# Note: This path is absolute and outside the project directory.
-GLOBAL_REGISTRY_PATH = pathlib.Path(
-    "/Users/mateicanavra/Library/Application Support/Cursor/User/globalStorage/rooveterinaryinc.roo-cline/settings/custom_modes.json"
-)
+# Global registry path is now loaded via the centralized config_loader
+# The hardcoded definition is removed. Functions will fetch the default path.
 
-def read_global_registry(registry_path: pathlib.Path = GLOBAL_REGISTRY_PATH) -> dict:
+def read_global_registry(registry_path: pathlib.Path = None) -> dict:
+    # Fetch default path from config loader if not provided
+    if registry_path is None:
+        registry_path = config_loader.get_global_registry_path()
     """
     Reads the global custom modes registry JSON file.
 
@@ -94,7 +94,10 @@ def update_global_registry(registry_data: dict, agent_metadata: dict) -> dict:
     return registry_data
 
 
-def write_global_registry(registry_data: dict, registry_path: pathlib.Path = GLOBAL_REGISTRY_PATH):
+def write_global_registry(registry_data: dict, registry_path: pathlib.Path = None):
+    # Fetch default path from config loader if not provided
+    if registry_path is None:
+        registry_path = config_loader.get_global_registry_path()
     """
     Writes the updated registry data back to the global JSON file safely.
 
@@ -130,10 +133,12 @@ def write_global_registry(registry_data: dict, registry_path: pathlib.Path = GLO
 # Example usage (for testing purposes, can be removed later)
 if __name__ == "__main__":
     # Example: Read, update, and write back
-    print(f"Using registry path: {GLOBAL_REGISTRY_PATH}")
+    # Use the getter function to display the configured path
+    effective_registry_path = config_loader.get_global_registry_path()
+    print(f"Using registry path: {effective_registry_path}")
 
     # 1. Read existing data
-    current_data = read_global_registry()
+    current_data = read_global_registry(effective_registry_path) # Pass the path explicitly
     print("\nRead current registry data:")
     print(json.dumps(current_data, indent=2))
 
@@ -164,11 +169,11 @@ if __name__ == "__main__":
 
     # 4. Write the updated data back
     try:
-        write_global_registry(updated_data)
-        print(f"\nSuccessfully wrote updated data to {GLOBAL_REGISTRY_PATH}")
+        write_global_registry(updated_data, effective_registry_path) # Pass the path explicitly
+        print(f"\nSuccessfully wrote updated data to {effective_registry_path}")
 
         # Verify by reading again
-        verify_data = read_global_registry()
+        verify_data = read_global_registry(effective_registry_path) # Pass the path explicitly
         print("\nVerified data read back from file:")
         print(json.dumps(verify_data, indent=2))
         

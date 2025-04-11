@@ -50,3 +50,7 @@ htmlcov/
 *.xml
 *.egg-info/
 *.mypy_cache/
+
+# Local config overrides
+*.local.yaml
+.rawr_registry/

@@ -1,0 +1,10 @@
+# rawr.config.yaml
+# Default configuration for the rawr CLI
+
+# Directory where individual agent configurations (config.yaml, system_prompt.md, etc.) are stored.
+# Path is relative to this config file's location (project root).
+agent_config_dir: cli/agent_config
+
+# Path to the global JSON file storing custom mode definitions managed by the CLI.
+# Path is relative to this config file's location (project root).
+global_registry_path: .rawr_registry/custom_modes.json
