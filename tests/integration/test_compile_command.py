@@ -331,3 +331,202 @@ def test_compile_fail_registry_write_error(setup_test_env, mocker):
 # - Test with different valid config structures (e.g., missing optional fields)
 # - Test slug case sensitivity if relevant
 # - Test interaction with a registry containing many other agents
+
+# --- Test Cases for Compile All ---
+
+def test_compile_all_success(setup_test_env, mocker):
+    """Test successful compilation of all agents when no slug is provided."""
+    runner, tmp_path, mock_registry_path, agents_dir = setup_test_env
+    agent_a_slug = "agent-a"
+    agent_b_slug = "agent-b"
+    not_an_agent_slug = "not-an-agent"
+
+    # --- Setup rawr.config.yaml ---
+    rawr_config_path = tmp_path / "rawr.config.yaml"
+    rawr_config_data = {"agent_config_dir": str(agents_dir)}
+    rawr_config_path.write_text(yaml.dump(rawr_config_data))
+    # mocker.patch('cli.config_loader.RAWR_CONFIG_PATH', rawr_config_path) # Removed - Handled by setup_test_env patching cli.main.*
+
+    # --- Setup Agent Configs ---
+    config_a = {
+        KEY_SLUG: agent_a_slug, KEY_NAME: "Agent A", KEY_ROLE_DEF: "Role A",
+        KEY_GROUPS: ["g1"], KEY_API_CONFIG: {"model": "gpt-4"}
+    }
+    config_b = {
+        KEY_SLUG: agent_b_slug, KEY_NAME: "Agent B", KEY_ROLE_DEF: "Role B",
+        KEY_GROUPS: ["g2"], KEY_API_CONFIG: {"model": "gpt-3.5"}
+    }
+    create_mock_config(agents_dir, agent_a_slug, config_a)
+    create_mock_config(agents_dir, agent_b_slug, config_b)
+
+    # Create a directory without config.yaml
+    (agents_dir / not_an_agent_slug).mkdir()
+
+    # Ensure registry is empty initially
+    if mock_registry_path.exists():
+        mock_registry_path.unlink()
+
+    # --- Action ---
+    result = runner.invoke(app, [CMD_COMPILE])
+
+    # --- Assertions ---
+    print(f"STDOUT:\n{result.stdout}")
+    print(f"STDERR:\n{result.stderr}")
+    assert result.exit_code == 0, f"CLI exited with code {result.exit_code}\nStderr: {result.stderr}"
+    assert f"Processing agent: {agent_a_slug}" in result.stdout # Assuming some per-agent logging
+    assert f"Processing agent: {agent_b_slug}" in result.stdout
+    assert f"Successfully compiled {agent_a_slug}" in result.stdout # Assuming success logging
+    assert f"Successfully compiled {agent_b_slug}" in result.stdout
+    assert "Finished compiling all agents." in result.stdout # Assuming summary logging
+    assert not_an_agent_slug not in result.stdout # Ensure non-agent dir is ignored/skipped silently or logged differently
+
+    assert mock_registry_path.exists(), "Registry file was not created."
+    registry_content = read_mock_registry(mock_registry_path)
+    assert KEY_CUSTOM_MODES in registry_content
+    assert len(registry_content[KEY_CUSTOM_MODES]) == 2
+
+    # Check registry entries (order might vary, so check slugs)
+    registry_slugs = {entry[KEY_SLUG] for entry in registry_content[KEY_CUSTOM_MODES]}
+    assert registry_slugs == {agent_a_slug, agent_b_slug}
+
+
+def test_compile_all_fail_missing_rawr_config(setup_test_env, mocker):
+    """Test failure when rawr.config.yaml is missing."""
+    runner, tmp_path, mock_registry_path, agents_dir = setup_test_env
+
+    # --- Setup: Ensure rawr.config.yaml does NOT exist ---
+    rawr_config_path = tmp_path / "rawr.config.yaml"
+    if rawr_config_path.exists():
+        rawr_config_path.unlink()
+    # Patch the constant used by the config loader
+    # mocker.patch('cli.config_loader.RAWR_CONFIG_PATH', rawr_config_path) # Removed - Handled by setup_test_env patching cli.main.*
+
+    # --- Action ---
+    result = runner.invoke(app, [CMD_COMPILE])
+
+    # --- Assertions ---
+    assert result.exit_code != 0, "CLI should exit with non-zero code for missing rawr.config.yaml"
+    assert "Error: RAWR configuration file not found at" in result.stderr
+    assert str(rawr_config_path) in result.stderr
+    assert not mock_registry_path.exists(), "Registry file should not be created on this error."
+
+
+def test_compile_all_fail_missing_agent_dir(setup_test_env, mocker):
+    """Test failure when agent_config_dir specified in rawr.config.yaml does not exist."""
+    runner, tmp_path, mock_registry_path, agents_dir = setup_test_env
+    non_existent_dir_path = tmp_path / "non_existent_agents"
+
+    # --- Setup rawr.config.yaml pointing to a non-existent directory ---
+    rawr_config_path = tmp_path / "rawr.config.yaml"
+    rawr_config_data = {"agent_config_dir": str(non_existent_dir_path)}
+    rawr_config_path.write_text(yaml.dump(rawr_config_data))
+    # mocker.patch('cli.config_loader.RAWR_CONFIG_PATH', rawr_config_path) # Removed - Handled by setup_test_env patching cli.main.*
+
+    # Ensure the target agent dir does NOT exist
+    assert not non_existent_dir_path.exists()
+
+    # --- Action ---
+    result = runner.invoke(app, [CMD_COMPILE])
+
+    # --- Assertions ---
+    assert result.exit_code != 0, "CLI should exit with non-zero code for missing agent_config_dir"
+    assert "Error: Agent configuration directory not found at" in result.stderr
+    assert str(non_existent_dir_path) in result.stderr
+    assert not mock_registry_path.exists(), "Registry file should not be created on this error."
+
+
+def test_compile_all_fail_no_valid_agents(setup_test_env, mocker):
+    """Test failure when agent_config_dir exists but contains no valid agent configs."""
+    runner, tmp_path, mock_registry_path, agents_dir = setup_test_env
+
+    # --- Setup rawr.config.yaml ---
+    rawr_config_path = tmp_path / "rawr.config.yaml"
+    rawr_config_data = {"agent_config_dir": str(agents_dir)}
+    rawr_config_path.write_text(yaml.dump(rawr_config_data))
+    # mocker.patch('cli.config_loader.RAWR_CONFIG_PATH', rawr_config_path) # Removed - Handled by setup_test_env patching cli.main.*
+
+    # --- Setup Agent Dir: Exists but is empty or contains only invalid dirs ---
+    (agents_dir / "empty_dir").mkdir()
+    (agents_dir / "dir_without_config").mkdir()
+    (agents_dir / "dir_without_config" / "some_file.txt").touch()
+
+    # Ensure registry is empty initially
+    if mock_registry_path.exists():
+        mock_registry_path.unlink()
+
+    # --- Action ---
+    result = runner.invoke(app, [CMD_COMPILE])
+
+    # --- Assertions ---
+    # Depending on implementation, this might be a success (0 agents compiled) or an error.
+    # The spec suggests an error message, implying non-zero exit.
+    assert result.exit_code != 0, "CLI should exit with non-zero code when no valid agents are found"
+    assert "Error: No valid agent configurations found to compile in" in result.stderr # Or similar message
+    assert str(agents_dir) in result.stderr
+    # Registry might be created empty or not created at all, depending on logic.
+    # Let's assume it shouldn't be created if no agents were processed.
+    assert not mock_registry_path.exists(), "Registry file should not be created if no agents compiled."
+
+
+def test_compile_all_partial_fail(setup_test_env, mocker):
+    """Test 'compile all' when one agent fails validation but others succeed."""
+    runner, tmp_path, mock_registry_path, agents_dir = setup_test_env
+    agent_a_slug = "agent-a-ok"
+    agent_fail_slug = "agent-b-fail"
+    agent_c_slug = "agent-c-ok"
+
+    # --- Setup rawr.config.yaml ---
+    rawr_config_path = tmp_path / "rawr.config.yaml"
+    rawr_config_data = {"agent_config_dir": str(agents_dir)}
+    rawr_config_path.write_text(yaml.dump(rawr_config_data))
+    # mocker.patch('cli.config_loader.RAWR_CONFIG_PATH', rawr_config_path) # Removed - Handled by setup_test_env patching cli.main.*
+
+    # --- Setup Agent Configs ---
+    config_a = {KEY_SLUG: agent_a_slug, KEY_NAME: "Agent A OK", KEY_ROLE_DEF: "Role A", KEY_GROUPS: ["g1"], KEY_API_CONFIG: {"model": "gpt-4"}}
+    config_fail = {KEY_SLUG: agent_fail_slug, KEY_ROLE_DEF: "Role Fail"} # Missing required 'name' and 'groups'
+    config_c = {KEY_SLUG: agent_c_slug, KEY_NAME: "Agent C OK", KEY_ROLE_DEF: "Role C", KEY_GROUPS: ["g3"], KEY_API_CONFIG: {"model": "gpt-3.5"}}
+
+    create_mock_config(agents_dir, agent_a_slug, config_a)
+    create_mock_config(agents_dir, agent_fail_slug, config_fail) # Invalid config
+    create_mock_config(agents_dir, agent_c_slug, config_c)
+
+    # Ensure registry is empty initially
+    if mock_registry_path.exists():
+        mock_registry_path.unlink()
+
+    # --- Action ---
+    result = runner.invoke(app, [CMD_COMPILE])
+
+    # --- Assertions ---
+    # Should still exit 0 because the overall command aims to compile *all possible*
+    # Individual failures are logged but don't stop the process.
+    assert result.exit_code == 0, f"CLI should exit 0 even with partial failures.\nStderr: {result.stderr}"
+
+    # Check logs for success and failure
+    assert f"Processing agent: {agent_a_slug}" in result.stdout
+    assert f"Successfully compiled {agent_a_slug}" in result.stdout
+    assert f"Processing agent: {agent_fail_slug}" in result.stdout
+    assert f"Error compiling agent {agent_fail_slug}:" in result.stderr # Expect error in stderr
+    assert "validation error" in result.stderr # Specific Pydantic error
+    assert f"Processing agent: {agent_c_slug}" in result.stdout
+    assert f"Successfully compiled {agent_c_slug}" in result.stdout
+    assert "Finished compiling all agents." in result.stdout # Summary log
+
+    # Check registry: Should contain only the successful agents
+    assert mock_registry_path.exists(), "Registry file was not created."
+    registry_content = read_mock_registry(mock_registry_path)
+    assert KEY_CUSTOM_MODES in registry_content
+    assert len(registry_content[KEY_CUSTOM_MODES]) == 2 # Only A and C should be present
+
+    registry_slugs = {entry[KEY_SLUG] for entry in registry_content[KEY_CUSTOM_MODES]}
+    assert registry_slugs == {agent_a_slug, agent_c_slug}
+    assert agent_fail_slug not in registry_slugs
+
+    # Optionally, check details of one agent
+    agent_a_entry = next(entry for entry in registry_content[KEY_CUSTOM_MODES] if entry[KEY_SLUG] == agent_a_slug)
+    assert agent_a_entry[KEY_NAME] == config_a[KEY_NAME]
+    assert agent_a_entry[KEY_ROLE_DEF] == config_a[KEY_ROLE_DEF]
+    assert agent_a_entry[KEY_GROUPS] == config_a[KEY_GROUPS]
+    assert agent_a_entry[KEY_API_CONFIG]["model"] == config_a[KEY_API_CONFIG]["model"]
+
+# --- TODO: Add error handling tests for compile all ---
