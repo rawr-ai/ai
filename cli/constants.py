@@ -2,8 +2,6 @@
 """Centralized constants for the CLI application."""
 
 # --- Configuration Keys ---
-TARGET_JSON_PATH = "target_json_path"
-MARKDOWN_BASE_DIR = "markdown_base_dir"
 
 # --- JSON/Data Structure Keys ---
 CUSTOM_MODES = "customModes"
@@ -13,9 +11,6 @@ ROLE_DEFINITION = "roleDefinition"
 CUSTOM_INSTRUCTIONS = "customInstructions"
 
 # --- Command Names ---
-CMD_ADD = "add"
-CMD_UPDATE = "update"
-CMD_DELETE = "delete"
 
 # --- Environment Variables ---
 ENV_CONFIG_PATH = "AGENT_CLI_CONFIG_PATH"
@@ -38,8 +33,6 @@ ROLE_DEFINITION_HEADINGS = [
 
 # --- Default Paths/Files ---
 DEFAULT_CONFIG_PATH = "cli/config.yaml"
-DEFAULT_TARGET_JSON = "configs/agents.json"
-DEFAULT_MARKDOWN_DIR = "docs/agents/"
 
 # --- User-Facing Messages (Example) ---
 # Add common error/success message formats if needed
