@@ -12,6 +12,7 @@ from . import compiler
 from . import registry_manager
 from .models import GlobalAgentConfig # Added for validation
 from pydantic import ValidationError as ConfigValidationError # Use Pydantic's error
+from typing import Tuple # Added for type hinting
 # from . import config_loader # This was duplicated, removed. The one above is sufficient.
 # --- Constants & Configuration ---
 # Assuming the global registry path is defined in constants
@@ -51,9 +52,29 @@ def main_callback():
 
 
 
+# --- Custom Exceptions ---
+class AgentProcessingError(Exception):
+    """Base exception for errors during agent processing."""
+    def __init__(self, message: str, agent_slug: str, original_exception: Optional[Exception] = None):
+        self.agent_slug = agent_slug
+        self.original_exception = original_exception
+        super().__init__(f"Error processing agent '{agent_slug}': {message}")
+
+class AgentLoadError(AgentProcessingError):
+    """Exception for errors loading or parsing agent config."""
+    pass
+
+class AgentValidationError(AgentProcessingError):
+    """Exception for config validation errors."""
+    pass
+
+class AgentCompileError(AgentProcessingError):
+    """Exception for errors during metadata extraction or registry update."""
+    pass
+
 
 # --- Helper Function for Single Agent Compilation ---
-def _compile_single_agent(agent_slug: str, current_registry_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def _compile_single_agent(agent_slug: str, current_registry_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Loads, validates, compiles a single agent config and updates registry data in memory.
 
@@ -62,7 +83,13 @@ def _compile_single_agent(agent_slug: str, current_registry_data: Dict[str, Any]
         current_registry_data: The current state of the global registry data.
 
     Returns:
-        The updated registry data if successful, None otherwise.
+        The updated registry data.
+
+    Raises:
+        AgentLoadError: If the config file cannot be found, read, or parsed.
+        AgentValidationError: If the config data fails schema validation.
+        AgentCompileError: If metadata extraction or registry update fails.
+        AgentProcessingError: For other unexpected errors during processing.
     """
     logger.info(f"Attempting to compile agent: {agent_slug}")
     agent_config_path = AGENT_CONFIG_DIR / agent_slug / "config.yaml"
@@ -81,20 +108,24 @@ def _compile_single_agent(agent_slug: str, current_registry_data: Dict[str, Any]
         logger.info(f"Successfully loaded and validated config for {agent_slug}")
     except FileNotFoundError:
         logger.error(f"Agent config file not found at {agent_config_path}")
-        typer.echo(f"❌ Error: Config file not found for agent '{agent_slug}' at {agent_config_path}", err=True)
-        return None # Indicate failure
+        msg = f"Config file not found at {agent_config_path}"
+        typer.echo(f"❌ Error: {msg}", err=True)
+        raise AgentLoadError(msg, agent_slug, e)
     except yaml.YAMLError as e:
         logger.error(f"YAML parsing failed for {agent_config_path}: {e}")
-        typer.echo(f"❌ Error: Failed to parse YAML for agent '{agent_slug}'. Details:\n{e}", err=True)
-        return None # Indicate failure
+        msg = f"Failed to parse YAML. Details:\n{e}"
+        typer.echo(f"❌ Error: {msg}", err=True)
+        raise AgentLoadError(msg, agent_slug, e)
     except ConfigValidationError as e:
         logger.error(f"Config validation failed for {agent_slug}: {e}")
-        typer.echo(f"❌ Error: Config validation failed for agent '{agent_slug}'. Details:\n{e}", err=True)
-        return None # Indicate failure
+        msg = f"Config validation failed. Details:\n{e}"
+        typer.echo(f"❌ Error: {msg}", err=True)
+        raise AgentValidationError(msg, agent_slug, e)
     except Exception as e:
         logger.exception(f"Unexpected error loading/validating config for {agent_slug}")
-        typer.echo(f"❌ Error: An unexpected error occurred loading/validating config for '{agent_slug}'. Details: {e}", err=True)
-        return None # Indicate failure
+        msg = f"An unexpected error occurred loading/validating config. Details: {e}"
+        typer.echo(f"❌ Error: {msg}", err=True)
+        raise AgentProcessingError(msg, agent_slug, e)
 
     # 2. Extract Metadata
     typer.echo(f"Processing '{agent_slug}': Extracting metadata...")
@@ -103,8 +134,9 @@ def _compile_single_agent(agent_slug: str, current_registry_data: Dict[str, Any]
         logger.info(f"Successfully extracted metadata for {agent_slug}")
     except Exception as e:
         logger.exception(f"Unexpected error extracting metadata for {agent_slug}")
-        typer.echo(f"❌ Error: An unexpected error occurred extracting metadata for '{agent_slug}'. Details: {e}", err=True)
-        return None # Indicate failure
+        msg = f"An unexpected error occurred extracting metadata. Details: {e}"
+        typer.echo(f"❌ Error: {msg}", err=True)
+        raise AgentCompileError(msg, agent_slug, e)
 
     # 3. Update Global Registry (In Memory)
     typer.echo(f"Processing '{agent_slug}': Updating registry data...")
@@ -119,8 +151,59 @@ def _compile_single_agent(agent_slug: str, current_registry_data: Dict[str, Any]
         return updated_registry_data # Return the updated data
     except Exception as e:
         logger.exception(f"Unexpected error updating global registry data for {agent_slug}")
-        typer.echo(f"❌ Error: An unexpected error occurred updating registry data for '{agent_slug}'. Details: {e}", err=True)
-        return None # Indicate failure
+        msg = f"An unexpected error occurred updating registry data. Details: {e}"
+        typer.echo(f"❌ Error: {msg}", err=True)
+        raise AgentCompileError(msg, agent_slug, e)
+
+
+# --- Helper Function for Compiling All Agents ---
+def _compile_all_agents(agent_config_dir: Path, initial_registry_data: Dict[str, Any]) -> Tuple[Dict[str, Any], int, int]:
+    """
+    Scans the agent directory, compiles all valid agents, and accumulates results.
+
+    Args:
+        agent_config_dir: The directory containing agent configurations.
+        initial_registry_data: The starting state of the global registry.
+
+    Returns:
+        A tuple containing:
+        - final_registry_data: The registry data after processing all agents.
+        - compiled_count: The number of successfully compiled agents.
+        - failed_count: The number of agents that failed to compile.
+    """
+    logger.info(f"Scanning for agent configurations in: {agent_config_dir}")
+    typer.echo(f"Scanning for agent configurations in: {agent_config_dir}")
+
+    compiled_count = 0
+    failed_count = 0
+    final_registry_data = initial_registry_data.copy() # Start with initial data
+
+    for item in agent_config_dir.iterdir():
+        if item.is_dir():
+            potential_config_path = item / "config.yaml"
+            if potential_config_path.is_file():
+                slug_to_compile = item.name
+                try:
+                    # Pass the *current* state of final_registry_data
+                    updated_data = _compile_single_agent(slug_to_compile, final_registry_data)
+                    final_registry_data = updated_data # Accumulate successful updates
+                    compiled_count += 1
+                    typer.echo(f"✅ Successfully processed agent: '{slug_to_compile}'")
+                except AgentProcessingError as e: # Catch base exception and its children
+                    # Error message already printed by _compile_single_agent
+                    logger.warning(f"Compilation failed for agent '{e.agent_slug}'. Skipping registry update for this agent.")
+                    typer.echo(f"ℹ️ Skipping registry update for failed agent: '{e.agent_slug}'")
+                    failed_count += 1
+                except Exception as e: # Catch any other unexpected errors during the loop
+                    logger.exception(f"Unexpected error processing directory for agent '{item.name}'")
+                    typer.echo(f"❌ Unexpected Error processing directory for agent '{item.name}'. Details: {e}", err=True)
+                    failed_count += 1 # Count as failure
+            else:
+                logger.debug(f"Skipping directory {item.name}, no config.yaml found.")
+        else:
+             logger.debug(f"Skipping non-directory item: {item.name}")
+
+    return final_registry_data, compiled_count, failed_count
 
 
 # --- CLI Command ---
@@ -139,10 +222,34 @@ def compile_agent_config(
     If AGENT_SLUG is provided, compiles only that agent.
     If AGENT_SLUG is omitted, compiles all valid agents found in the configured directory.
     """
-    global_registry_path = GLOBAL_REGISTRY_PATH # Use module-level constant
+    global_registry_path = GLOBAL_REGISTRY_PATH # Use module-level constant loaded via config_loader
+    agent_config_dir = AGENT_CONFIG_DIR # Use module-level constant loaded via config_loader
+
+    # --- Configuration Sanity Checks ---
+    # Check if the config loader successfully found/defaulted the paths
+    # Note: config_loader prints warnings if files are missing/invalid but provides defaults.
+    # We need to check if the *resulting* paths are usable, especially agent_config_dir.
+
+    # Check if the determined agent_config_dir actually exists, crucial for "compile all"
+    if not agent_slug and (not agent_config_dir or not agent_config_dir.is_dir()):
+         # This error takes precedence over registry reading if compiling all
+         logger.error(f"Agent configuration directory not found or invalid: {agent_config_dir}")
+         # Check if the path matches the default, implying rawr.config.yaml might be missing/invalid
+         if agent_config_dir == config_loader.DEFAULT_AGENT_CONFIG_DIR:
+              # Attempt to determine the expected default config path for a better error message
+              expected_rawr_config = config_loader.DEFAULT_CONFIG_PATH
+              if not expected_rawr_config.exists():
+                   typer.echo(f"❌ Error: RAWR configuration file not found at {expected_rawr_config} and default agent directory is invalid.", err=True)
+              else:
+                   typer.echo(f"❌ Error: Agent configuration directory specified or defaulted to '{agent_config_dir}' is invalid. Check rawr.config.yaml.", err=True)
+
+         else:
+              typer.echo(f"❌ Error: Agent configuration directory not found at the configured path: {agent_config_dir}", err=True)
+         raise typer.Exit(code=1)
+
 
     # --- Read Initial Global Registry ---
-    # This needs to be done regardless of single or all, before any compilation attempts.
+    # Proceed with reading the registry only after confirming agent_config_dir is potentially usable (for compile all)
     typer.echo(f"Reading global registry from {global_registry_path}...")
     try:
         initial_registry_data = registry_manager.read_global_registry(global_registry_path)
@@ -157,93 +264,95 @@ def compile_agent_config(
         typer.echo(f"❌ Error: An unexpected error occurred while reading the global registry. Details: {e}", err=True)
         raise typer.Exit(code=1) # Exit if registry read fails fundamentally
 
-    final_registry_data = initial_registry_data.copy() # Start with the initial data
+    compiled_count = 0
+    failed_count = 0
+    # final_registry_data will be determined by the compilation functions
 
     if agent_slug:
         # --- Compile Single Agent ---
         logger.info(f"CLI 'compile' command invoked for single agent slug: {agent_slug}")
         typer.echo(f"--- Compiling Single Agent: {agent_slug} ---")
-
-        updated_data = _compile_single_agent(agent_slug, final_registry_data)
-
-        if updated_data is None:
-            typer.echo(f"\n❌ Compilation failed for agent: '{agent_slug}'. Registry not written.", err=True)
+        try:
+            final_registry_data = _compile_single_agent(agent_slug, initial_registry_data)
+            compiled_count = 1
+            # Success message printed by helper
+        except AgentProcessingError as e:
+            # Error message already printed by helper
+            typer.echo(f"\n❌ Compilation failed for agent: '{e.agent_slug}'. Registry not written.", err=True)
             raise typer.Exit(code=1) # Exit with error if single compile fails
-        else:
-            final_registry_data = updated_data # Update the data to be written
-            typer.echo(f"✅ Successfully processed agent: '{agent_slug}'")
+        except Exception as e: # Catch unexpected errors here too
+            logger.exception(f"Unexpected error during single agent compilation flow for '{agent_slug}'")
+            typer.echo(f"❌ Unexpected Error during compilation for '{agent_slug}'. Details: {e}", err=True)
+            raise typer.Exit(code=1)
 
     else:
         # --- Compile All Agents ---
         logger.info("CLI 'compile' command invoked to compile all agents.")
         typer.echo("--- Compiling All Agents ---")
+        # agent_config_dir validity check is done before registry read
 
-        if not AGENT_CONFIG_DIR or not AGENT_CONFIG_DIR.is_dir():
-             logger.error(f"Agent config directory not found or not configured: {AGENT_CONFIG_DIR}")
-             typer.echo(f"❌ Error: Agent configuration directory not found or invalid: {AGENT_CONFIG_DIR}", err=True)
+        try:
+            final_registry_data, compiled_count, failed_count = _compile_all_agents(
+                agent_config_dir, initial_registry_data
+            )
+        except Exception as e: # Catch unexpected errors during the overall 'all' process
+             logger.exception(f"Unexpected error during 'compile all' execution in directory {agent_config_dir}")
+             typer.echo(f"❌ Unexpected Error during 'compile all'. Details: {e}", err=True)
              raise typer.Exit(code=1)
 
-        typer.echo(f"Scanning for agent configurations in: {AGENT_CONFIG_DIR}")
-        compiled_count = 0
-        failed_count = 0
-
-        # Basic non-recursive scan for now (as per initial TDD step)
-        for item in AGENT_CONFIG_DIR.iterdir():
-            if item.is_dir():
-                potential_config_path = item / "config.yaml"
-                if potential_config_path.is_file():
-                    slug_to_compile = item.name
-                    typer.echo(f"\nFound potential agent: {slug_to_compile}")
-                    # Pass the *current* state of final_registry_data
-                    updated_data = _compile_single_agent(slug_to_compile, final_registry_data)
-                    if updated_data is not None:
-                        final_registry_data = updated_data # Accumulate successful updates
-                        compiled_count += 1
-                        typer.echo(f"✅ Successfully processed agent: '{slug_to_compile}'")
-                    else:
-                        failed_count += 1
-                        typer.echo(f"ℹ️ Skipping registry update for failed agent: '{slug_to_compile}'")
-                else:
-                    logger.debug(f"Skipping directory {item.name}, no config.yaml found.")
-            else:
-                 logger.debug(f"Skipping non-directory item: {item.name}")
-
-
+        # --- Report Results for Compile All ---
         if compiled_count == 0 and failed_count == 0:
-             typer.echo("\n⚠️ No valid agent configurations found to compile.", err=True)
-             # Decide if this should be an error exit or not. Test spec implies error.
-             # Let's make it an error for now based on Scenario: No valid configurations found
-             raise typer.Exit(code=1)
+            # No agent directories with config.yaml were found at all
+            logger.error(f"No valid agent configurations found to compile in {agent_config_dir}")
+            typer.echo(f"\n❌ Error: No valid agent configurations found to compile in {agent_config_dir}", err=True)
+            raise typer.Exit(code=1)
+        elif failed_count > 0 and compiled_count == 0:
+            # Agents were found and attempted, but all failed
+            typer.echo(f"\n❌ Compilation finished. All {failed_count} attempted agent(s) failed. Registry not updated.", err=True)
+            # Do not proceed to write registry if nothing succeeded
+            raise typer.Exit(code=1) # Treat as overall failure if nothing compiled
         elif failed_count > 0:
-             typer.echo(f"\n⚠️ Compilation finished with {failed_count} error(s). Registry will be written with successful updates only.")
+            # Partial success
+            typer.echo(f"\n⚠️ Compilation finished with {failed_count} error(s). Registry will be written with {compiled_count} successful update(s).")
         else:
-             typer.echo(f"\n✅ Successfully processed {compiled_count} agent(s).")
+            # All success
+            typer.echo(f"\n✅ Successfully processed {compiled_count} agent(s).")
+            # Re-add the final summary message for the all-success case
+            typer.echo(f"\n🎉 Finished compiling all {compiled_count} agents successfully.")
 
 
     # --- Write Final Global Registry (Common for both single and all) ---
     # Only write if at least one agent was processed successfully (or if single agent was successful)
-    if final_registry_data != initial_registry_data: # Check if any changes were actually made
+    # Write registry if any agents were successfully compiled
+    # (even if initial_registry_data was empty and final_registry_data now has content)
+    # Also write if a single agent was successfully compiled (agent_slug case)
+    should_write_registry = compiled_count > 0 # Write if at least one agent succeeded (single or all)
+
+    if should_write_registry:
         typer.echo(f"\nWriting updated global registry to {global_registry_path}...")
         try:
             registry_manager.write_global_registry(
                 registry_path=global_registry_path,
-                registry_data=final_registry_data
+                registry_data=final_registry_data # Use the potentially updated data
             )
             typer.echo(f"✅ Global registry successfully written.")
             logger.info(f"Successfully wrote updated global registry to {global_registry_path}")
         except Exception as e:
             logger.exception(f"Unexpected error writing final global registry to {global_registry_path}")
             typer.echo(f"❌ Error: An unexpected error occurred while writing the final global registry. Details: {e}", err=True)
-            raise typer.Exit(code=1) # Exit if final write fails
+            # If write fails after successful compiles, it's still an error
+            raise typer.Exit(code=1)
     else:
-        typer.echo("\nℹ️ No changes detected in the registry. File not written.")
+        # Only print this if we didn't attempt to write
+        # Only print this if we didn't attempt to write because nothing succeeded
+        if not agent_slug: # Don't print for single agent failure (already handled)
+             typer.echo("\nℹ️ No successful compilations. Registry file not written.")
 
 
-    # Final success message
-    if agent_slug:
+    # Final summary message (already printed for 'compile all' cases above)
+    if agent_slug and compiled_count > 0: # Only print for single agent success
          typer.echo(f"\n🎉 Successfully compiled and updated global registry for agent: '{agent_slug}'")
-    else:
-         typer.echo(f"\n🎉 Finished compiling all agents. Successful: {compiled_count}, Failed: {failed_count}.")
+    # 'compile all' summary messages are handled within the 'else' block above
 
     # Removed the outer try...except typer.Exit block
     # The individual try...except blocks within each step already handle raising typer.Exit(1)

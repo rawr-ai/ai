@@ -123,10 +123,14 @@ def test_compile_success_new_agent(setup_test_env):
         mock_registry_path.unlink()
 
     # Action
-    compile_agent_config(agent_slug) # Call function directly
+    result = runner.invoke(app, [CMD_COMPILE, agent_slug])
 
     # Assertions
-    # No exit code or stdout to check with direct call
+    print(f"STDOUT:\n{result.stdout}")
+    print(f"STDERR:\n{result.stderr}")
+    assert result.exit_code == 0, f"CLI exited with code {result.exit_code}\nStderr: {result.stderr}"
+    assert MSG_SUCCESS_PREFIX in result.stdout
+    assert agent_slug in result.stdout
     assert mock_registry_path.exists(), "Registry file was not created."
 
     registry_content = read_mock_registry(mock_registry_path)
@@ -170,10 +174,14 @@ def test_compile_success_update_agent(setup_test_env):
     create_mock_config(agents_dir, agent_slug, updated_config_data)
 
     # Action
-    compile_agent_config(agent_slug) # Call function directly
+    result = runner.invoke(app, [CMD_COMPILE, agent_slug])
 
     # Assertions
-    # No exit code or stdout to check with direct call
+    print(f"STDOUT:\n{result.stdout}")
+    print(f"STDERR:\n{result.stderr}")
+    assert result.exit_code == 0, f"CLI exited with code {result.exit_code}\nStderr: {result.stderr}"
+    assert MSG_SUCCESS_PREFIX in result.stdout
+    assert agent_slug in result.stdout
     registry_content = read_mock_registry(mock_registry_path)
     assert len(registry_content[KEY_CUSTOM_MODES]) == 1 # Should still only have one agent
 
@@ -198,14 +206,16 @@ def test_compile_fail_config_not_found(setup_test_env, mocker): # Add mocker fix
     mock_registry_path.write_text(json.dumps(initial_registry, indent=2))
     # DO NOT create config for agent_slug
 
-    # Action & Assertions
-    # Expect FileNotFoundError
-    with pytest.raises(FileNotFoundError) as excinfo:
-        compile_agent_config(agent_slug) # Call function directly
-    # Optionally check the error message content if needed
-    assert agent_slug in str(excinfo.value)
-    # Check that the error message contains the expected path part
-    assert agent_slug in str(excinfo.value) and "config.yaml" in str(excinfo.value)
+    # Action
+    result = runner.invoke(app, [CMD_COMPILE, agent_slug])
+
+    # Assertions
+    print(f"STDOUT:\n{result.stdout}")
+    print(f"STDERR:\n{result.stderr}")
+    assert result.exit_code != 0, "CLI should exit with non-zero code for missing config"
+    assert MSG_ERR_PREFIX in result.stderr
+    assert MSG_ERR_CONFIG_NOT_FOUND in result.stderr
+    assert agent_slug in result.stderr
 
     # Verify registry remains unchanged
     registry_content = read_mock_registry(mock_registry_path)
@@ -228,14 +238,16 @@ def test_compile_fail_invalid_yaml(setup_test_env, mocker): # Add mocker fixture
     initial_registry = {KEY_CUSTOM_MODES: []}
     mock_registry_path.write_text(json.dumps(initial_registry, indent=2))
 
-    # Action & Assertions
-    # Expect ConfigLoadError (from invalid YAML)
-    # Expect yaml.YAMLError directly from the parser or potentially wrapped by caller
-    with pytest.raises(yaml.YAMLError) as excinfo:
-        compile_agent_config(agent_slug) # Call function directly
-    # Optionally check the error message content if needed
-    # Check for YAML parsing error message specifics (agent_slug is not in standard YAMLError)
-    assert "YAML" in str(excinfo.value).upper() or "PARSING" in str(excinfo.value).upper() or "SCAN" in str(excinfo.value).upper()
+    # Action
+    result = runner.invoke(app, [CMD_COMPILE, agent_slug])
+
+    # Assertions
+    print(f"STDOUT:\n{result.stdout}")
+    print(f"STDERR:\n{result.stderr}")
+    assert result.exit_code != 0, "CLI should exit with non-zero code for invalid YAML"
+    assert MSG_ERR_PREFIX in result.stderr
+    assert MSG_ERR_YAML_INDICATOR in result.stderr or MSG_ERR_PARSING_INDICATOR in result.stderr or MSG_ERR_SCAN_INDICATOR in result.stderr
+    assert agent_slug in result.stderr # The error message from _compile_single_agent includes the slug
 
     # Verify registry remains unchanged
     registry_content = read_mock_registry(mock_registry_path)
@@ -258,15 +270,18 @@ def test_compile_fail_schema_validation(setup_test_env, mocker): # Add mocker fi
     initial_registry = {KEY_CUSTOM_MODES: []}
     mock_registry_path.write_text(json.dumps(initial_registry, indent=2))
 
-    # Action & Assertions
-    # Expect ConfigValidationError
-    # Expect Pydantic's ValidationError for schema issues
-    with pytest.raises(ValidationError) as excinfo:
-        compile_agent_config(agent_slug) # Call function directly
-    # Optionally check the error message content if needed
-    assert agent_slug in str(excinfo.value)
-    assert "validation error" in str(excinfo.value) # Pydantic v2 error message format
-    assert "Field required" in str(excinfo.value) # Check for specific Pydantic detail
+    # Action
+    result = runner.invoke(app, [CMD_COMPILE, agent_slug])
+
+    # Assertions
+    print(f"STDOUT:\n{result.stdout}")
+    print(f"STDERR:\n{result.stderr}")
+    assert result.exit_code != 0, "CLI should exit with non-zero code for schema validation failure"
+    assert MSG_ERR_PREFIX in result.stderr
+    assert MSG_ERR_VALIDATION_FAILED in result.stderr
+    assert agent_slug in result.stderr
+    assert MSG_ERR_VALIDATION_INDICATOR in result.stderr # Check for generic indicator
+    assert MSG_ERR_FIELD_REQUIRED in result.stderr # Check for specific detail
 
     # Verify registry remains unchanged
     registry_content = read_mock_registry(mock_registry_path)
@@ -288,11 +303,16 @@ def test_compile_fail_registry_read_error(setup_test_env, mocker):
     # Precondition: Patch registry read function to raise OSError
     mock_read = mocker.patch('cli.registry_manager.read_global_registry', side_effect=OSError(MSG_ERR_PERMISSION_READ))
 
-    # Action & Assertions
-    # Expect OSError and check the message
-    with pytest.raises(OSError) as excinfo:
-        compile_agent_config(agent_slug) # Call function directly
-    assert MSG_ERR_PERMISSION_READ in str(excinfo.value)
+    # Action
+    result = runner.invoke(app, [CMD_COMPILE, agent_slug])
+
+    # Assertions
+    print(f"STDOUT:\n{result.stdout}")
+    print(f"STDERR:\n{result.stderr}")
+    assert result.exit_code != 0, "CLI should exit with non-zero code for registry read error"
+    assert MSG_ERR_PREFIX in result.stderr
+    assert MSG_ERR_READ_FAILED in result.stderr # Check for the specific error message from the main function
+    assert MSG_ERR_PERMISSION_READ in result.stderr # Check that the original error detail is included
     mock_read.assert_called_once_with(mock_registry_path) # Verify mock was called
 
 
@@ -314,11 +334,16 @@ def test_compile_fail_registry_write_error(setup_test_env, mocker):
 
     mock_write = mocker.patch('cli.registry_manager.write_global_registry', side_effect=OSError(MSG_ERR_DISK_FULL_WRITE))
 
-    # Action & Assertions
-    # Expect OSError and check the message
-    with pytest.raises(OSError) as excinfo:
-        compile_agent_config(agent_slug) # Call function directly
-    assert MSG_ERR_DISK_FULL_WRITE in str(excinfo.value)
+    # Action
+    result = runner.invoke(app, [CMD_COMPILE, agent_slug])
+
+    # Assertions
+    print(f"STDOUT:\n{result.stdout}")
+    print(f"STDERR:\n{result.stderr}")
+    assert result.exit_code != 0, "CLI should exit with non-zero code for registry write error"
+    assert MSG_ERR_PREFIX in result.stderr
+    assert MSG_ERR_WRITE_FAILED in result.stderr # Check for the specific error message from the main function
+    assert MSG_ERR_DISK_FULL_WRITE in result.stderr # Check that the original error detail is included
     # Check that write was called (after successful steps before it)
     mock_write.assert_called_once() # Verify mock was called
 
@@ -509,12 +534,12 @@ def test_compile_all_partial_fail(setup_test_env, mocker):
     assert f"Processing '{agent_a_slug}': Loading and validating config..." in result.stdout
     assert f"✅ Successfully processed agent: '{agent_a_slug}'" in result.stdout
     assert f"Processing '{agent_fail_slug}': Loading and validating config..." in result.stdout
-    assert f"❌ Error: Config validation failed for agent '{agent_fail_slug}'." in result.stderr # Check specific error message from _compile_single_agent
+    assert f"❌ Error: Config validation failed. Details:" in result.stderr # Check for the new error format prefix
     assert "validation error" in result.stderr # Specific Pydantic error
     assert f"Processing '{agent_c_slug}': Loading and validating config..." in result.stdout
     assert f"✅ Successfully processed agent: '{agent_c_slug}'" in result.stdout
     # Check for key parts of the partial success message, avoiding exact counts/emojis
-    assert "Finished compiling agents" in result.stdout and "Successful:" in result.stdout and "Failed:" in result.stdout
+    assert "Compilation finished with" in result.stdout and "error(s)" in result.stdout and "successful update(s)" in result.stdout
 
     # Check registry: Should contain only the successful agents
     assert mock_registry_path.exists(), "Registry file was not created."
