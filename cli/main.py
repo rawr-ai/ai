@@ -106,11 +106,11 @@ def _compile_single_agent(agent_slug: str, current_registry_data: Dict[str, Any]
              raise ValueError(f"Config file {agent_config_path} did not parse into a dictionary.")
         agent_config = GlobalAgentConfig.model_validate(config_data)
         logger.info(f"Successfully loaded and validated config for {agent_slug}")
-    except FileNotFoundError:
+    except FileNotFoundError as e: # Capture the exception as 'e'
         logger.error(f"Agent config file not found at {agent_config_path}")
         msg = f"Config file not found at {agent_config_path}"
         typer.echo(f"❌ Error: {msg}", err=True)
-        raise AgentLoadError(msg, agent_slug, e)
+        raise AgentLoadError(msg, agent_slug, e) # Pass the captured exception
     except yaml.YAMLError as e:
         logger.error(f"YAML parsing failed for {agent_config_path}: {e}")
         msg = f"Failed to parse YAML. Details:\n{e}"

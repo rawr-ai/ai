@@ -1,0 +1,42 @@
+graph TD
+    A[Start: rawr compile invoked] --> B{Agent Slug Provided?};
+    B -- Yes --> C[Compile Single Agent];
+    B -- No --> D[Compile All Agents];
+
+    subgraph Compile Single Agent
+        C1[Get Agent Config Path<br>(AGENT_CONFIG_DIR / slug / config.yaml)];
+        C2[Load & Validate Config<br>(GlobalAgentConfig model)];
+        C3[Extract Metadata<br>(compiler.extract_registry_metadata)];
+        C4[Read Global Registry<br>(registry_manager.read_global_registry)];
+        C5[Update Registry Data (In Memory)<br>(registry_manager.update_global_registry)];
+        C6[Write Global Registry File<br>(registry_manager.write_global_registry)];
+        C7[Report Success/Failure for Slug];
+        C --> C1 --> C2 --> C3 --> C4 --> C5 --> C6 --> C7;
+    end
+
+    subgraph Compile All Agents
+        D1[Get Agent Config Dir Path];
+        D2[Scan Dir for Potential Agent Dirs (Slugs)];
+        D3[Read Global Registry (Initial)];
+        D4[Loop Through Potential Slugs];
+        D5{Compile Agent (slug, current_registry_data)};
+        D6{Update Cumulative Registry Data?};
+        D7[Log Error & Skip Agent];
+        D8[End Loop];
+        D9[Write Final Cumulative Registry File];
+        D10[Report Summary (Success/Fail Count)];
+        D --> D1 --> D2 --> D3 --> D4;
+        D4 -- For Each Slug --> D5;
+        D5 -- Success --> D6;
+        D5 -- Failure --> D7;
+        D6 --> D4;
+        D7 --> D4;
+        D4 -- End Loop --> D8 --> D9 --> D10;
+    end
+
+    C7 --> E[End];
+    D10 --> E[End];
+
+    %% Error Handling Notes:
+    %% - Single Agent: Errors in C1-C6 typically halt and report failure (C7).
+    %% - Compile All: Errors in D5 halt *that agent* (D7), loop continues. Errors in D3/D9 halt all.
