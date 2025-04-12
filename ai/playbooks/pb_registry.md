@@ -27,6 +27,10 @@
 
 -   `pb_create_new_agent.md`: Defines the standard process for designing, configuring, and registering new agents/custom modes.
 
+### Development Process Playbooks
+
+-   `ai/playbooks/pb_tdd_cycle.md`: To guide developers through the core Test-Driven Development (TDD) Red-Green-Refactor cycle, enabling them to build robust, well-tested software incrementally. This playbook aims to establish a consistent process for writing tests before functional code, ensuring code quality, maintainability, and developer confidence.
+
 ### Meta Playbooks
 
 -   `pb_create_playbook.md`: Describes the process for creating new playbooks, including analysis, drafting, review, and finalization.

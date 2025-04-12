@@ -265,7 +265,7 @@ def test_global_agent_config_extraneous_field():
     """Test Case GAC-09"""
     # This test assumes extra='forbid' is set on GlobalAgentConfig. If not, it should pass without error.
     # Let's write it to expect an error as per the test plan.
-    data = {"slug": "extra-field", "name": "Extra", "roleDefinition": "...", "groups": ["read"], "customInstructions": "Do extra things"}
+    data = {"slug": "extra-field", "name": "Extra", "roleDefinition": "...", "groups": ["read"], "some_truly_unknown_field": "value"}
     # Check if the model actually forbids extra fields
     if GlobalAgentConfig.model_config.get('extra') == 'forbid':
         with pytest.raises(ValidationError) as excinfo:

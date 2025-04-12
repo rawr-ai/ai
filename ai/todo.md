@@ -33,6 +33,7 @@
 - [ ] [UPDATE] Update the CLI README to reflect the new functionality.
 
 # Testing
+- [ ] [FIX] Remove all brittle string literal assertions and replace them with constants or other validation strategies
 - [X] [NEW] Set up test suite for the CLI.
 - [X] [TEST] Test the CLI to ensure it works as expected.
 

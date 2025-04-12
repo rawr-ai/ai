@@ -28,6 +28,7 @@ class GlobalAgentConfig(BaseModel):
     slug: str = Field(..., description="Unique identifier slug for the agent/mode.")
     name: str = Field(..., description="Display name for the agent/mode.")
     roleDefinition: str = Field(..., description="The core role definition or system prompt.")
+    customInstructions: Optional[str] = Field(None, description="Optional user-defined instructions for the agent.")
     groups: List[Union[str, Tuple[str, GroupRestriction]]] = Field(
         ...,
         description="List of groups the agent belongs to. Can be simple names or tuples with restrictions."
