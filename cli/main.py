@@ -59,6 +59,14 @@ app = typer.Typer(
 )
 
 
+@app.callback()
+def main_callback():
+    """
+    Main callback for the CLI application. Currently does nothing.
+    """
+    pass # Explicitly define that the main app takes no arguments itself
+
+
 # --- Helper to load config (REMOVING - Old Markdown workflow) ---
 # def get_config_paths():
 #     """Loads configuration paths."""
