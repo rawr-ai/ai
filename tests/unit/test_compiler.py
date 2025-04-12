@@ -1,4 +1,6 @@
 import pytest
+import json
+from pathlib import Path
 from cli.models import GlobalAgentConfig, ApiConfig, GroupRestriction
 from cli.compiler import extract_registry_metadata
 
@@ -12,14 +14,9 @@ def test_extract_full_data():
         groups=["groupA", ("groupB", GroupRestriction(fileRegex=".*\\.py", description="Python files"))],
         apiConfiguration=ApiConfig(model="gpt-4", url="http://example.com/api", params={"temp": 0.5})
     )
-    expected_output = {
-        "slug": "test-agent",
-        "name": "Test Agent",
-        "roleDefinition": "This is a test role.",
-        # Expecting the tuple structure to be preserved in the output dict
-        "groups": ["groupA", ["groupB", {"fileRegex": ".*\\.py", "description": "Python files"}]],
-        "apiConfiguration": {"model": "gpt-4", "url": "http://example.com/api", "params": {"temp": 0.5}}
-    }
+    asset_path = Path(__file__).parent.parent / 'assets' / 'unit' / 'test_compiler' / 'expected_output_full.json'
+    with open(asset_path, 'r') as f:
+        expected_output = json.load(f)
     actual_output = extract_registry_metadata(input_config)
     # Convert HttpUrl to string for comparison if present
     if actual_output.get("apiConfiguration") and isinstance(actual_output["apiConfiguration"].get("url"), object):
@@ -37,13 +34,9 @@ def test_extract_minimal_data():
         groups=["core"],
         apiConfiguration=None
     )
-    expected_output = {
-        "slug": "minimal-agent",
-        "name": "Minimal Agent",
-        "roleDefinition": "Minimal role.",
-        "groups": ["core"],
-        "apiConfiguration": None # Explicitly check for None or absence based on implementation
-    }
+    asset_path = Path(__file__).parent.parent / 'assets' / 'unit' / 'test_compiler' / 'expected_output_minimal.json'
+    with open(asset_path, 'r') as f:
+        expected_output = json.load(f)
     actual_output = extract_registry_metadata(input_config)
 
     # Check if apiConfiguration is None or absent, depending on implementation choice
