@@ -11,9 +11,10 @@ CONFIG_FILENAME = "config.yaml" # Needed by create_mock_config
 
 def create_mock_config(agents_dir: Path, slug: str, config_data: dict):
     """Creates a mock config.yaml file for a given agent slug."""
-    agent_dir = agents_dir / slug
-    agent_dir.mkdir(parents=True, exist_ok=True)
-    config_path = agent_dir / CONFIG_FILENAME # Use literal filename
+    # agent_dir = agents_dir / slug # REMOVED - No longer creating subdirectories
+    # agent_dir.mkdir(parents=True, exist_ok=True) # REMOVED
+    # Create the config file directly in the agents_dir with the slug as the filename stem
+    config_path = agents_dir / f"{slug}.yaml"
     # import yaml # Import yaml safely inside the function - Moved to top level
     try:
         with open(config_path, 'w') as f:

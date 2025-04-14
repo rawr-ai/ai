@@ -3,5 +3,6 @@
   "name": "Minimal Agent",
   "roleDefinition": "Minimal role.",
   "groups": ["core"],
-  "apiConfiguration": null
+  "apiConfiguration": null,
+  "version": "0.1.0"
 }

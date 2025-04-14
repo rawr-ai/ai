@@ -55,14 +55,26 @@ def extract_registry_metadata(config: GlobalAgentConfig) -> Dict[str, Any]:
         # Access required fields directly. If validation passed, these should exist.
         # Pydantic models raise AttributeError if a field is accessed but missing
         # (though validation should prevent this unless the model itself is flawed).
+        # Extract all fields intended for the registry from the validated config
+        # Use direct access for required fields, getattr for optional ones
         metadata = {
             "slug": config.slug,
             "name": config.name,
-            "description": getattr(config, 'description', None), # Use getattr for safe access
-            "version": getattr(config, 'version', '0.1.0'), # Use getattr, provide default
-            # Add other fields from GlobalAgentConfig as needed for the registry
-            # e.g., "author": config.author, "tags": config.tags
+            "roleDefinition": config.roleDefinition, # Required field
+            "groups": config.groups, # Required field
+            "description": getattr(config, 'description', None),
+            "version": getattr(config, 'version', '0.1.0'), # Default handled here if not in config
+            # Note: customInstructions is explicitly excluded by registry_manager.update_global_registry
         }
+
+        # Handle optional apiConfiguration: serialize if present
+        api_config = getattr(config, 'apiConfiguration', None)
+        if api_config:
+            # Use model_dump() for Pydantic v2+ serialization
+            metadata["apiConfiguration"] = api_config.model_dump(mode='json') # Use mode='json' for JSON-compatible types
+
+        # Filter out None values for optional fields AFTER potentially adding apiConfiguration
+        metadata = {k: v for k, v in metadata.items() if v is not None}
         logger.debug(f"Successfully extracted metadata for {config.slug}")
         return metadata
     except AttributeError as e:
@@ -200,10 +212,12 @@ def _compile_all_agents(
                     initial_registry_data # Pass initial for context if needed by helper
                 )
                 if success:
-                    # Update the final registry data directly here
-                    final_registry_data['agents'][slug_to_compile] = agent_metadata
+                    # Use the registry manager helper to correctly update the list structure
+                    final_registry_data = registry_manager.update_global_registry(
+                        final_registry_data, agent_metadata
+                    )
                     compiled_count += 1
-                    logger.info(f"Successfully compiled and added/updated '{slug_to_compile}' in registry data.")
+                    # Logger message in update_global_registry is sufficient
                 else:
                     # _compile_specific_agent should raise an exception on failure now
                     # This 'else' block might be redundant if exceptions are always raised on failure.
@@ -273,8 +287,10 @@ def compile_agents(agent_slug: Optional[str] = None): # Renamed parameter
                 agent_slug, agent_config_dir, initial_registry_data
             )
             if success:
-                 # Update registry here for the single agent case
-                 final_registry_data['agents'][agent_slug] = agent_metadata
+                 # Use the registry manager helper to correctly update the list structure
+                 final_registry_data = registry_manager.update_global_registry(
+                     final_registry_data, agent_metadata
+                 )
                  compiled_count = 1
             else:
                  # Should not happen if exceptions are raised correctly
