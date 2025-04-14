@@ -58,8 +58,8 @@ def extract_registry_metadata(config: GlobalAgentConfig) -> Dict[str, Any]:
         metadata = {
             "slug": config.slug,
             "name": config.name,
-            "description": config.description,
-            "version": config.version,
+            "description": getattr(config, 'description', None), # Use getattr for safe access
+            "version": getattr(config, 'version', '0.1.0'), # Use getattr, provide default
             # Add other fields from GlobalAgentConfig as needed for the registry
             # e.g., "author": config.author, "tags": config.tags
         }

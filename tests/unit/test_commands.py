@@ -7,17 +7,17 @@ from unittest.mock import patch, MagicMock, call
 
 # --- Fixtures ---
 
-# @pytest.fixture
-# def mock_config_a():
-#     return AgentConfig(slug="agent-a", name="Agent A", roleDefinition="Role A")
+@pytest.fixture
+def mock_config_a():
+    return AgentConfig(slug="agent-a", name="Agent A", roleDefinition="Role A")
 #
-# @pytest.fixture
-# def mock_config_b():
-#     return AgentConfig(slug="agent-b", name="Agent B", roleDefinition="Role B", customInstructions="Custom B")
+@pytest.fixture
+def mock_config_b():
+    return AgentConfig(slug="agent-b", name="Agent B", roleDefinition="Role B", customInstructions="Custom B")
 #
-# @pytest.fixture
-# def mock_configs_list(mock_config_a, mock_config_b):
-#     return [mock_config_a, mock_config_b]
+@pytest.fixture
+def mock_configs_list(mock_config_a, mock_config_b):
+    return [mock_config_a, mock_config_b]
 
 @pytest.fixture
 def mock_target_json_path(tmp_path):
