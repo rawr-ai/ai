@@ -72,16 +72,14 @@ def extract_registry_metadata(config: GlobalAgentConfig) -> Dict[str, Any]:
 
 
 def _compile_specific_agent(
-    agent_slug: str,
-    agent_config_base_dir: Path, # Renamed for clarity
-    current_registry_data: Dict[str, Any] # Keep this for potential future use? Or remove? Test implies it's needed.
+    config_path: Path, # Changed: Now accepts the full path
+    current_registry_data: Dict[str, Any]
 ) -> Tuple[Dict[str, Any], bool]: # Return metadata and success flag
     """
-    Loads, validates, and extracts metadata for a single agent config.
+    Loads, validates, and extracts metadata for a single agent config using its full path.
 
     Args:
-        agent_slug: The slug of the agent to compile.
-        agent_config_base_dir: The base directory containing agent configurations (e.g., 'agents/').
+        config_path: The full path to the agent configuration file (e.g., 'agents/subdir/my_agent.yaml').
         current_registry_data: The current state of the global registry data (passed for context, not modified here).
 
     Returns:
@@ -94,64 +92,64 @@ def _compile_specific_agent(
         AgentValidationError: If the config data fails schema validation.
         AgentCompileError: If metadata extraction fails (due to internal errors).
         AgentProcessingError: For other unexpected errors during processing.
-        (These exceptions are caught by the caller, _compile_all_agents)
+        (These exceptions are caught by the caller, _compile_all_agents or compile_agents)
     """
-    logger.info(f"Attempting to compile agent: {agent_slug}")
-    # Config file is expected to be directly in the base dir, named <slug>.yaml
-    agent_config_path = agent_config_base_dir / f"{agent_slug}.yaml"
+    agent_slug = config_path.stem # Extract slug from the path
+    logger.info(f"Attempting to compile agent: {agent_slug} from path: {config_path}")
+    # Path reconstruction removed, using config_path directly
 
     # 1. Load and Validate Agent Config
     typer.echo(f"Processing '{agent_slug}': Loading and validating config...")
     try:
-        if not agent_config_path.exists():
-             raise FileNotFoundError(f"Agent config file not found at {agent_config_path}")
-        config_content = agent_config_path.read_text()
+        if not config_path.exists(): # Use config_path
+             raise FileNotFoundError(f"Agent config file not found at {config_path}")
+        config_content = config_path.read_text() # Use config_path
         config_data = yaml.safe_load(config_content)
         if not isinstance(config_data, dict):
-             raise ValueError(f"Config file {agent_config_path} did not parse into a dictionary.")
+             raise ValueError(f"Config file {config_path} did not parse into a dictionary.") # Use config_path
         # Assuming a validation function exists or using Pydantic directly
         # Replace `validate_config` if it was a placeholder
         agent_config = GlobalAgentConfig.model_validate(config_data)
-        logger.info(f"Successfully loaded and validated config for {agent_slug}")
+        logger.info(f"Successfully loaded and validated config for {agent_slug} from {config_path}") # Use local agent_slug
     except FileNotFoundError as e:
-        logger.error(f"Agent config file not found at {agent_config_path}")
-        msg = f"Config file not found at {agent_config_path}"
-        raise AgentLoadError(msg, agent_slug=agent_slug, original_exception=e)
+        logger.error(f"Agent config file not found at {config_path}") # Use config_path
+        msg = f"Config file not found at {config_path}" # Use config_path
+        raise AgentLoadError(msg, agent_slug=agent_slug, original_exception=e) # Use local agent_slug
     except yaml.YAMLError as e:
-        logger.error(f"YAML parsing failed for {agent_config_path}: {e}")
-        msg = f"Failed to parse YAML. Details:\n{e}"
+        logger.error(f"YAML parsing failed for {config_path}: {e}") # Use config_path
+        msg = f"Failed to parse YAML for {config_path}. Details:\n{e}" # Use config_path
         typer.echo(f"❌ Error: {msg}", err=True)
-        raise AgentLoadError(msg, agent_slug=agent_slug, original_exception=e)
+        raise AgentLoadError(msg, agent_slug=agent_slug, original_exception=e) # Use local agent_slug
     except PydanticValidationError as e: # Catch Pydantic's specific error
-        logger.error(f"Config validation failed for {agent_slug}: {e}")
+        logger.error(f"Config validation failed for {agent_slug} from {config_path}: {e}") # Use local agent_slug
         # Format Pydantic errors for better readability if desired
         error_details = "\n".join([f"  - {err['loc']}: {err['msg']}" for err in e.errors()])
         msg = f"Config validation failed. Details:\n{error_details}"
-        typer.echo(f"❌ Error: {msg}", err=True)
-        raise AgentValidationError(msg, agent_slug=agent_slug, original_exception=e)
+        typer.echo(f"❌ Error validating {agent_slug}: {msg}", err=True) # Use local agent_slug
+        raise AgentValidationError(msg, agent_slug=agent_slug, original_exception=e) # Use local agent_slug
     except Exception as e:
-        logger.exception(f"Unexpected error loading/validating config for {agent_slug}")
-        msg = f"An unexpected error occurred loading/validating config. Details: {e}"
+        logger.exception(f"Unexpected error loading/validating config for {agent_slug} from {config_path}") # Use local agent_slug
+        msg = f"An unexpected error occurred loading/validating config for {agent_slug}. Details: {e}" # Use local agent_slug
         typer.echo(f"❌ Error: {msg}", err=True)
-        raise AgentProcessingError(msg, agent_slug=agent_slug, original_exception=e)
+        raise AgentProcessingError(msg, agent_slug=agent_slug, original_exception=e) # Use local agent_slug
 
     # 2. Extract Metadata
     typer.echo(f"Processing '{agent_slug}': Extracting metadata...")
     try:
         # Call the actual (now defined) extraction function
         registry_metadata = extract_registry_metadata(agent_config)
-        logger.info(f"Successfully extracted metadata for {agent_slug}")
+        logger.info(f"Successfully extracted metadata for {agent_slug}") # Use local agent_slug
     except Exception as e:
         # Catch AttributeError specifically from metadata extraction, or any other Exception
-        logger.exception(f"Error extracting metadata for {agent_slug}")
-        msg = f"Failed to extract metadata. Details: {e}"
-        typer.echo(f"❌ Error: {msg}", err=True)
+        logger.exception(f"Error extracting metadata for {agent_slug}") # Use local agent_slug
+        msg = f"Failed to extract metadata for {agent_slug}. Details: {e}" # Use local agent_slug
+        typer.echo(f"❌ Error extracting metadata for {agent_slug}: {msg}", err=True) # Use local agent_slug
         # Raise AgentCompileError for issues during this phase
-        raise AgentCompileError(msg, agent_slug=agent_slug, original_exception=e)
+        raise AgentCompileError(msg, agent_slug=agent_slug, original_exception=e) # Use local agent_slug
 
     # 3. Return Metadata and Success
     # The registry update happens in the calling function (_compile_all_agents or compile_agents)
-    typer.echo(f"✅ Successfully processed agent: '{agent_slug}'")
+    typer.echo(f"✅ Successfully processed agent: '{agent_slug}' from {config_path}") # Use local agent_slug
     return registry_metadata, True
 
 
@@ -188,38 +186,39 @@ def _compile_all_agents(
 
 
     # Iterate through .yaml files in the base directory
-    for item in agent_config_base_dir.iterdir():
-        if item.is_file() and item.suffix.lower() == '.yaml':
-            slug_to_compile = item.stem # Use filename stem as slug
-            logger.debug(f"Found potential agent config: {item.name}, slug: {slug_to_compile}")
-            try:
-                # Pass the initial registry data for context, but don't expect modification
-                agent_metadata, success = _compile_specific_agent(
-                    slug_to_compile,
-                    agent_config_base_dir,
-                    initial_registry_data # Pass initial for context if needed by helper
-                )
-                if success:
-                    # Update the final registry data directly here
-                    final_registry_data['agents'][slug_to_compile] = agent_metadata
-                    compiled_count += 1
-                    logger.info(f"Successfully compiled and added/updated '{slug_to_compile}' in registry data.")
-                else:
-                    # _compile_specific_agent should raise an exception on failure now
-                    # This 'else' block might be redundant if exceptions are always raised on failure.
-                    # However, keeping it handles the theoretical case where it returns False without exception.
-                    logger.warning(f"Compilation reported as failed for agent '{slug_to_compile}' but no exception was caught.")
-                    failed_count += 1
-
-            except AgentProcessingError as e: # Catch specific processing errors from helper
-                # Error message already printed by _compile_specific_agent
-                logger.warning(f"Compilation failed for agent '{e.agent_slug}'. Skipping registry update for this agent.")
-                # typer.echo(f"ℹ️ Skipping registry update for failed agent: '{e.agent_slug}'") # Redundant? Helper prints error.
+    # Recursively find all .yaml files in the base directory and subdirectories
+    for config_path in agent_config_base_dir.rglob('*.yaml'):
+        slug_to_compile = config_path.stem  # Use filename stem as slug
+        logger.debug(f"Found potential agent config: {config_path.name}, slug: {slug_to_compile}")
+        try:
+            # Pass the initial registry data for context, but don't expect modification
+            # Pass the full config_path directly
+            agent_metadata, success = _compile_specific_agent(
+                config_path,
+                initial_registry_data
+            )
+            if success:
+                # Update the final registry data directly here
+                final_registry_data['agents'][slug_to_compile] = agent_metadata
+                compiled_count += 1
+                logger.info(f"Successfully compiled and added/updated '{slug_to_compile}' in registry data.")
+            else:
+                # _compile_specific_agent should raise an exception on failure now
+                # This 'else' block might be redundant if exceptions are always raised on failure.
+                # However, keeping it handles the theoretical case where it returns False without exception.
+                logger.warning(f"Compilation reported as failed for agent '{slug_to_compile}' but no exception was caught.")
                 failed_count += 1
-            except Exception as e: # Catch any other unexpected errors during the loop
-                logger.exception(f"Unexpected error processing file for agent '{slug_to_compile}'")
-                typer.echo(f"❌ Unexpected Error processing file for agent '{slug_to_compile}'. Details: {e}", err=True)
-                failed_count += 1 # Count as failure
+
+        except AgentProcessingError as e:  # Catch specific processing errors from helper
+            # Error message already printed by _compile_specific_agent
+            logger.warning(f"Compilation failed for agent '{e.agent_slug}'. Skipping registry update for this agent.")
+            # typer.echo(f"ℹ️ Skipping registry update for failed agent: '{e.agent_slug}'") # Redundant? Helper prints error.
+            failed_count += 1
+        except Exception as e:  # Catch any other unexpected errors during the loop
+            logger.exception(f"Unexpected error processing file for agent '{slug_to_compile}'")
+            failed_count += 1
+            typer.echo(f"❌ Unexpected Error processing file for agent '{slug_to_compile}'. Details: {e}", err=True)
+            failed_count += 1 # Count as failure
         else:
              logger.debug(f"Skipping non-YAML file or directory: {item.name}")
 
@@ -269,8 +268,11 @@ def compile_agents(agent_slug: Optional[str] = None): # Renamed parameter
             # Pass agent_config_dir explicitly
             # Pass agent_slug to _compile_specific_agent
             # _compile_specific_agent now returns (metadata, success)
+            # Construct the full path for the single agent case
+            single_agent_config_path = agent_config_dir / f"{agent_slug}.yaml"
+            # Pass the constructed path
             agent_metadata, success = _compile_specific_agent(
-                agent_slug, agent_config_dir, initial_registry_data
+                single_agent_config_path, initial_registry_data
             )
             if success:
                  # Update registry here for the single agent case
