@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 from cli.models import GlobalAgentConfig, ApiConfig, GroupRestriction
 from cli.compiler import extract_registry_metadata
+from cli.compiler import _compile_specific_agent
+from cli.exceptions import AgentValidationError, AgentLoadError
 
 # Test Case ID: TC_EXTRACT_001 - Happy Path - Full Data Input
 def test_extract_full_data():
@@ -113,3 +115,65 @@ def test_extract_field_exclusion():
     expected_keys = {'slug', 'name', 'roleDefinition', 'groups', 'apiConfiguration'}
     actual_output = extract_registry_metadata(input_config)
     assert set(actual_output.keys()) == expected_keys
+
+
+# --- Tests for _compile_specific_agent (Focus on Slug Extraction) ---
+
+def test_compile_specific_agent_uses_config_slug(tmp_path):
+    """
+    COMPILER_UT_SLUG_001: Verify _compile_specific_agent uses the slug from the config file content.
+    """
+    config_slug = "agent-from-config"
+    config_path = tmp_path / "config.yaml"
+    config_data = {
+        "slug": config_slug,
+        "name": "Test Name",
+        "roleDefinition": "Test Role",
+        "groups": ["test"]
+    }
+    config_path.write_text(json.dumps(config_data)) # Use JSON for simplicity here
+
+    # Mock registry data (not strictly needed for this test focus)
+    mock_registry = {}
+
+    agent_config, success = _compile_specific_agent(config_path, mock_registry)
+
+    assert success is True
+    assert agent_config is not None
+    assert agent_config.slug == config_slug
+
+def test_compile_specific_agent_validation_error_missing_slug(tmp_path):
+    """
+    COMPILER_UT_SLUG_002: Verify AgentValidationError is raised if slug is missing in config.
+    """
+    config_path = tmp_path / "missing_slug_config.yaml"
+    config_data = {
+        # slug is missing
+        "name": "Test Name",
+        "roleDefinition": "Test Role",
+        "groups": ["test"]
+    }
+    config_path.write_text(json.dumps(config_data))
+
+    mock_registry = {}
+
+    with pytest.raises(AgentValidationError) as excinfo:
+        _compile_specific_agent(config_path, mock_registry)
+
+    assert "slug" in str(excinfo.value) # Check that the error message mentions the missing slug field
+    assert excinfo.value.agent_slug == str(config_path) # Error should report the path when slug isn't validated
+
+def test_compile_specific_agent_load_error_bad_yaml(tmp_path):
+    """
+    COMPILER_UT_SLUG_003: Verify AgentLoadError is raised for invalid YAML/JSON before slug extraction.
+    """
+    config_path = tmp_path / "bad_format.yaml"
+    config_path.write_text("slug: valid-slug\n name: Test Name\n roleDefinition: Test Role\n groups: [test]\n bad_indent: true") # Invalid YAML
+
+    mock_registry = {}
+
+    with pytest.raises(AgentLoadError) as excinfo:
+        _compile_specific_agent(config_path, mock_registry)
+
+    assert "Failed to parse YAML" in str(excinfo.value)
+    assert excinfo.value.agent_slug == str(config_path) # Error should report the path

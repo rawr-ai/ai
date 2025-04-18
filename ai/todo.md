@@ -39,6 +39,7 @@
 
 # System
 - [ ] [NEW] Enable agents to manage long-term project files (e.g. todo lists, project plans, etc.)
+- [ ] [NEW] Auto-generate repo directory structure on every tree change as a diagram/graph and inject it into the system prompt.
 
 ---
 

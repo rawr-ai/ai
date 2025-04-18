@@ -9,6 +9,7 @@ import builtins # Needed for mocking builtins.open
 
 # Module to test
 from cli import config_loader
+from cli.config_loader import discover_config_files
 
 # --- Test Constants ---
 DEFAULT_AGENT_DIR_NAME = "cli/agent_config"
@@ -521,3 +522,85 @@ def test_getters_fallback_to_defaults(monkeypatch):
 
     assert config_loader.get_agent_config_dir() == expected_agent_dir
     assert config_loader.get_global_registry_path() == expected_registry_path
+
+
+# --- Tests for discover_config_files ---
+
+def test_discover_config_files_finds_configs(tmp_path):
+    """
+    DISCOVERY_UT_001: Verify discover_config_files finds config.yaml at various depths.
+    """
+    # Structure:
+    # tmp_path/
+    #   config.yaml
+    #   subdir1/
+    #     config.yaml
+    #     subsubdir/
+    #       config.yaml
+    #   subdir2/
+    #     other.txt
+    #   subdir3/ (empty)
+    #   subdir4/
+    #     config.yml (should be ignored)
+
+    config1 = tmp_path / "config.yaml"
+    subdir1 = tmp_path / "subdir1"
+    config2 = subdir1 / "config.yaml"
+    subsubdir = subdir1 / "subsubdir"
+    config3 = subsubdir / "config.yaml"
+    subdir2 = tmp_path / "subdir2"
+    other_file = subdir2 / "other.txt"
+    subdir3 = tmp_path / "subdir3"
+    subdir4 = tmp_path / "subdir4"
+    ignored_config = subdir4 / "config.yml"
+
+    config1.touch()
+    subdir1.mkdir()
+    config2.touch()
+    subsubdir.mkdir()
+    config3.touch()
+    subdir2.mkdir()
+    other_file.touch()
+    subdir3.mkdir()
+    subdir4.mkdir()
+    ignored_config.touch()
+
+    found_files = discover_config_files(tmp_path)
+
+    expected_files = sorted([
+        config1.resolve(),
+        config2.resolve(),
+        config3.resolve()
+    ])
+
+    assert len(found_files) == 3
+    assert sorted(found_files) == expected_files
+    for f in found_files:
+        assert f.is_absolute()
+
+def test_discover_config_files_empty_dir(tmp_path):
+    """
+    DISCOVERY_UT_002: Verify discover_config_files returns empty list for empty dir.
+    """
+    found_files = discover_config_files(tmp_path)
+    assert found_files == []
+
+def test_discover_config_files_no_configs(tmp_path):
+    """
+    DISCOVERY_UT_003: Verify discover_config_files returns empty list for dir with no config.yaml.
+    """
+    (tmp_path / "subdir1").mkdir()
+    (tmp_path / "subdir1" / "other.txt").touch()
+    (tmp_path / "subdir2").mkdir()
+
+    found_files = discover_config_files(tmp_path)
+    assert found_files == []
+
+def test_discover_config_files_non_existent_dir():
+    """
+    DISCOVERY_UT_004: Verify discover_config_files returns empty list for non-existent dir.
+    """
+    non_existent_path = Path("./surely/this/does/not/exist/ever")
+    assert not non_existent_path.exists()
+    found_files = discover_config_files(non_existent_path)
+    assert found_files == []
