@@ -133,6 +133,63 @@ def test_extract_registry_metadata_missing_attribute():
         # pytest.fail("Test expected to fail: extract_registry_metadata needs error handling for missing attributes.") # Remove explicit fail
 
 
+
+# Test cases for extract_registry_metadata description logic
+@pytest.mark.parametrize(
+    "config_data, expected_description",
+    [
+        # Case 1: Description exists
+        (
+            {"slug": "agent1", "name": "Agent 1", "roleDefinition": "Role Def 1", "description": "Explicit Desc 1", "groups": ["g1"]},
+            "Explicit Desc 1"
+        ),
+        # Case 2: Description is None, roleDefinition is long
+        (
+            {"slug": "agent2", "name": "Agent 2", "roleDefinition": "A very long role definition that definitely exceeds the one hundred and fifty character limit imposed by the metadata extraction logic, requiring truncation.", "description": None, "groups": ["g1"]},
+            "A very long role definition that definitely exceeds the one hundred and fifty character limit imposed by the metadata extraction logic, requiring trun..."
+        ),
+        # Case 3: Description is empty string, roleDefinition is long
+        (
+            {"slug": "agent3", "name": "Agent 3", "roleDefinition": "Another very long role definition that also definitely exceeds the one hundred and fifty character limit imposed by the metadata extraction logic, requiring truncation.", "description": "", "groups": ["g1"]},
+            "Another very long role definition that also definitely exceeds the one hundred and fifty character limit imposed by the metadata extraction logic, req..."
+        ),
+        # Case 4: Description is None, roleDefinition is short
+        (
+            {"slug": "agent4", "name": "Agent 4", "roleDefinition": "Short role def.", "description": None, "groups": ["g1"]},
+            "Short role def."
+        ),
+        # Case 5: Description is empty string, roleDefinition is short
+        (
+            {"slug": "agent5", "name": "Agent 5", "roleDefinition": "Another short role def.", "description": "", "groups": ["g1"]},
+            "Another short role def."
+        ),
+    ],
+    ids=[
+        "description_exists",
+        "desc_none_long_role",
+        "desc_empty_long_role",
+        "desc_none_short_role",
+        "desc_empty_short_role",
+    ]
+)
+def test_extract_registry_metadata_description_logic(config_data, expected_description):
+    """
+    Verify extract_registry_metadata correctly handles description field,
+    falling back to truncated roleDefinition if needed.
+    """
+    # Create a GlobalAgentConfig instance from the test data
+    config_obj = GlobalAgentConfig(**config_data)
+
+    # Call the function under test
+    metadata = extract_registry_metadata(config_obj)
+
+    # Assert the description field in the metadata is correct
+    assert metadata["description"] == expected_description
+    # Assert other basic fields are present (optional sanity check)
+    assert metadata["slug"] == config_data["slug"]
+    assert metadata["name"] == config_data["name"]
+
+
 # == Tests for _compile_specific_agent ==
 
 @patch('cli.compiler.Path')

@@ -3,6 +3,7 @@ import yaml
 import os
 from pathlib import Path
 import sys
+from typing import List
 
 # Determine the project root directory dynamically
 # Assumes this script is in 'cli/' subdirectory relative to the project root
@@ -82,6 +83,31 @@ def get_agent_config_dir() -> Path:
 def get_global_registry_path() -> Path:
      # Fallback needed
     return settings.get('global_registry_path', DEFAULT_GLOBAL_REGISTRY_PATH).resolve()
+
+
+def discover_config_files(base_dir: str) -> List[Path]:
+    """
+    Recursively discovers all 'config.yaml' files within a base directory.
+
+    Args:
+        base_dir: The starting directory path as a string.
+
+    Returns:
+        A list of absolute Path objects for all found 'config.yaml' files.
+    """
+    base_path = Path(base_dir).resolve()
+    config_files = []
+    if not base_path.is_dir():
+        # Or raise an error, depending on desired behavior
+        print(f"Warning: Base directory '{base_dir}' not found or is not a directory.", file=sys.stderr)
+        return []
+
+    # Use rglob to recursively find files named 'config.yaml'
+    for config_file in base_path.rglob('config.yaml'):
+        if config_file.is_file(): # Ensure it's a file, not a directory named config.yaml
+            config_files.append(config_file.resolve()) # Store absolute path
+
+    return config_files
 
 if __name__ == '__main__':
     # Example usage/test
