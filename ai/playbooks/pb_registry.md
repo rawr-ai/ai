@@ -30,6 +30,7 @@
 ### Development Process Playbooks
 
 -   `ai/playbooks/pb_tdd_cycle.md`: To guide developers through the core Test-Driven Development (TDD) Red-Green-Refactor cycle, enabling them to build robust, well-tested software incrementally. This playbook aims to establish a consistent process for writing tests before functional code, ensuring code quality, maintainability, and developer confidence.
+-   `.ai/playbooks/pb_linear_sprint_orchestration.md`: To guide an orchestrator agent (like myself) in managing a standard Linear sprint/cycle using a multi-agent AI team. This involves planning, assigning tasks, tracking progress, facilitating reviews, and ensuring the status of work is accurately reflected in Linear throughout the cycle.
 
 ### Meta Playbooks
 
