@@ -90,3 +90,17 @@ def compile_agent_config(
 # --- Entry Point Execution ---
 if __name__ == "__main__":
     app()
+
+# ---------------------------------------------------------------------------
+# Backwards-compatibility alias
+# ---------------------------------------------------------------------------
+# A handful of integration tests import the Typer instance under the name
+# `cli` instead of `app` (e.g. `from cli.main import cli`).  To avoid touching
+# those tests – and to provide a slightly more ergonomic shorthand for end-
+# users – we expose an additional module level variable that references the
+# very same Typer object.
+
+# NOTE: This must come *after* the `app` variable is created so the alias
+# references the fully-initialised Typer instance.
+
+cli = app  # noqa: E305 – public re-export for historical reasons

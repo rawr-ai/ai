@@ -37,4 +37,8 @@ class GlobalAgentConfig(BaseModel):
     apiConfiguration: Optional[ApiConfig] = Field(None, description="Optional API configuration for the agent.")
 
     class Config:
-        extra = Extra.forbid # Ensure no extra fields are allowed, as per scope limitation
+        # Disallow unknown top-level fields – this keeps the schema strict for
+        # direct instantiation in unit-tests.  The compiler performs its own
+        # pre-validation filtering to remain backwards-compatible with legacy
+        # YAML files that contain additional attributes.
+        extra = Extra.forbid
