@@ -1,7 +1,0 @@
-{
-  "slug": "test-agent",
-  "name": "Test Agent",
-  "roleDefinition": "This is a test role.",
-  "groups": ["groupA", ["groupB", {"fileRegex": ".*\\.py", "description": "Python files"}]],
-  "apiConfiguration": {"model": "gpt-4", "url": "http://example.com/api", "params": {"temp": 0.5}}
-}

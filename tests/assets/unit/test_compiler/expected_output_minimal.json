@@ -1,7 +1,0 @@
-{
-  "slug": "minimal-agent",
-  "name": "Minimal Agent",
-  "roleDefinition": "Minimal role.",
-  "groups": ["core"],
-  "apiConfiguration": null
-}
